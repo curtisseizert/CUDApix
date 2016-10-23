@@ -5,7 +5,7 @@
 #include <thrust/reduce.h>
 
 #include "S0.cuh"
-#include "sieve/lpf.cuh"
+#include "sieve/lpf_mu.cuh"
 
 int8_t mu[3] = {1, -1, -1};
 
@@ -18,7 +18,7 @@ T S0(T x, T y)
   int8_t * d_mu;
   uint32_t arraySize = y + (4 * threads) - y % (4 * threads);
 
-  d_mu = get_d_mu((uint64_t)0, y);
+  d_mu = gen_d_mu((uint64_t)0, y);
 
   cudaMalloc(&d_quot, arraySize * sizeof(int64_t));
   cudaMallocHost(&h_quot, arraySize * sizeof(int64_t));
@@ -32,15 +32,12 @@ T S0(T x, T y)
 
   cudaMemcpy(h_quot, d_quot, arraySize * sizeof(int64_t), cudaMemcpyDeviceToHost);
 
-  for(uint32_t i = 0; i < y; i++){
-    std::cout << (long long int) h_quot[i] << std::endl;
-    h_sum += h_quot[i];
-  }
+  for(uint32_t i = 0; i < y; i++) h_sum += h_quot[i];
 
   cudaFree(d_mu);
   cudaFree(d_quot);
 
-  std::cout << h_sum << std::endl;
+  // std::cout << h_sum << std::endl;
 
   return sum;
 }

@@ -10,7 +10,7 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeL
 
 
 template <typename T>
-T* get_d_lpf(T bottom, T top);
+T* gen_d_lpf(T bottom, T top);
 
 template <typename T>
-int8_t * get_d_mu(T bottom, T top);
+int8_t * gen_d_mu(T bottom, T top);

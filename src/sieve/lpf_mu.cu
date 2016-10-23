@@ -8,6 +8,11 @@
 
 #include "sieve/lpf_mu.cuh"
 
+/*
+- make a version of lpf that only goes up to the nth prime
+
+ */
+
 const uint16_t h_sieveBytes = 16384;
 __constant__ uint16_t sieveBytes = 16384;
 __constant__ uint8_t numSmallPrimes = 11;
@@ -24,6 +29,8 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint32_t * d_lpf, uint32_t pr
        if((2*i+1 + bstart) % smallPrimes[j] == 0) atomicMin(&s_lpf32[i], smallPrimes[j]);
      }
   }
+
+  __syncthreads();
 
   for(uint32_t i = threadIdx.x; i < primeListLength; i+= blockDim.x){
       uint32_t p = d_primeList[i];
@@ -50,6 +57,8 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t pr
        if((2*i+1 + bstart) % smallPrimes[j] == 0) atomicMin((unsigned long long *)&s_lpf32[i], (unsigned long long)smallPrimes[j]);
      }
   }
+
+  __syncthreads();
 
   for(uint32_t i = threadIdx.x; i < primeListLength; i+= blockDim.x){
       uint32_t p = d_primeList[i];
@@ -168,7 +177,7 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeL
 }
 
 template <typename T>
-T* get_d_lpf(T bottom, T top)
+T* gen_d_lpf(T bottom, T top)
 {
   uint16_t threads = 256, sieveWords = h_sieveBytes/(sizeof(T));
   uint32_t * d_primeList, primeListLength, blocks = 1 + (top - bottom) / (2 * sieveWords);
@@ -182,15 +191,16 @@ T* get_d_lpf(T bottom, T top)
   lpf_kernel<<<blocks, threads, h_sieveBytes>>>(d_primeList, d_lpf, primeListLength, sieveWords, bottom);
 
   cudaDeviceSynchronize();
+  cudaFree(d_primeList);
 
   return d_lpf;
 }
 
-template uint32_t * get_d_lpf<uint32_t>(uint32_t bottom, uint32_t top);
-template uint64_t * get_d_lpf<uint64_t>(uint64_t bottom, uint64_t top);
+template uint32_t * gen_d_lpf<uint32_t>(uint32_t bottom, uint32_t top);
+template uint64_t * gen_d_lpf<uint64_t>(uint64_t bottom, uint64_t top);
 
 template <typename T>
-int8_t * get_d_mu(T bottom, T top)
+int8_t * gen_d_mu(T bottom, T top)
 {
   uint16_t threads = 256, sieveWords = h_sieveBytes/(sizeof(T));
   uint32_t * d_primeList, primeListLength, blocks = 1 + (top - bottom) / (2 * sieveWords);
@@ -208,5 +218,5 @@ int8_t * get_d_mu(T bottom, T top)
   return d_mu;
 }
 
-template int8_t * get_d_mu<uint32_t>(uint32_t bottom, uint32_t top);
-template int8_t * get_d_mu<uint64_t>(uint64_t bottom, uint64_t top);
+template int8_t * gen_d_mu<uint32_t>(uint32_t bottom, uint32_t top);
+template int8_t * gen_d_mu<uint64_t>(uint64_t bottom, uint64_t top);

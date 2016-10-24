@@ -15,41 +15,15 @@ typedef unsigned __int128 uint128_t;
 
 int main()
 {
-  // mpz_class x, y, total;
-  // x = pow(2,64);
-  // y = 97125767;//231112254739;//1015748248;
-
-  uint64_t x, y, p2, pix, piy;// s1_trivial, totalV, s0;
-  int64_t s3;
+  uint64_t x, y, p2, pix, piy;
+  int64_t s3, * d_phi;
   x = pow(10,12);
   y = 10000;
   uint32_t c = 6;
-  std::cout << "y = " << y << std::endl;
-  piy = CudaSieve::countPrimes(0, y, 0);
 
-  p2 = P2(x,y);
-  std::cout << "P2  = " << p2 << std::endl;
-  //
-  // s1_trivial = S1_trivial(x,y);
-  // std::cout << "S1_trivial = " << s1_trivial << std::endl;
-  //
-  // totalV = V(x,y);
-  // std::cout << "V = " << totalV << std::endl;
-  //
-  // uint64_t pi = s1_trivial + totalV + y - 1 - totalP2;
-  //
-  // std::cout << "\n" << pi << std::endl;
+  Phi phi(x/y, y);
 
-  // s0 = S0(x, y);
-  // std::cout << s0 << std::endl;
-
-  s3 = S3(x, y, c);
-
-  std::cout << s3 << std::endl;
-
-  pix = piy + s3 - 1 - p2;
-
-  std::cout << "pi(x) = " << pix << std::endl;
+  d_phi = phi.generateRange()
 
   return 0;
 }

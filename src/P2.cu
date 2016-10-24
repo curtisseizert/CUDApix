@@ -9,10 +9,13 @@
 #include <gmpxx.h>
 #include <future>
 
+#include "uint128_t.cu"
 #include "CUDASieve/cudasieve.hpp"
 #include "P2.cuh"
 
-uint64_t MAX_RANGE = 1ul << 33; // does not work as a define above x = 2^64
+__global__ void divXbyY(uint128_t x, uint64_t * y, size_t len);
+
+uint64_t maxRange = 1ul << 33; // does not work as a define above x = 2^64
 
 // this is a less efficient P2 implementation compared to the one below, but
 // it has the advantage of not being limited to a 64 bit x, which it accomplishes
@@ -34,7 +37,7 @@ mpz_class P2(mpz_class x, mpz_class y)
   PrimeArray hi, lo;
   lo.top = sqrt_x;
   hi.bottom = sqrt_x;
-  hi.top = sqrt_x + MAX_RANGE;
+  hi.top = sqrt_x + maxRange;
 
   ResetCounter counter;
 
@@ -73,7 +76,7 @@ mpz_class P2(mpz_class x, mpz_class y)
 
     gap += lo.len + hi.len; // change ranges for next sieving interval
     hi.bottom = hi.top;
-    hi.top += MAX_RANGE;
+    hi.top += maxRange;
     lo.top = lo.bottom;
 
     cudaFree(hi.d_primes);
@@ -91,12 +94,12 @@ mpz_class P2(mpz_class x, mpz_class y)
   std::cout << std::endl;
   return total;
 }
-/*
-uint128_t P2(uint128_t x, uint128_t y)
-{
-    uint128_t total = 0; // z is a temp for conversion to uint64_t
 
-    uint64_t sqrt_x = sqrt(x);
+#ifdef _UINT128_T
+mpz_class P2(uint128_t x, uint64_t y, uint64_t sqrt_x)
+{
+    mpz_class total = 0;
+
     uint64_t top = x/y;
 
     uint64_t * d_sums, gap = 0;
@@ -105,7 +108,7 @@ uint128_t P2(uint128_t x, uint128_t y)
     PrimeArray hi, lo;
     lo.top = sqrt_x;
     hi.bottom = sqrt_x;
-    hi.top = sqrt_x + MAX_RANGE;
+    hi.top = sqrt_x + maxRange;
 
     ResetCounter counter;
 
@@ -116,21 +119,14 @@ uint128_t P2(uint128_t x, uint128_t y)
       lo.bottom += lo.bottom & 1ull; // make sure bounds of sieving intervals are even
 
       // Get primes P1 such that y < p < sqrt(x)
-      lo.h_primes = CudaSieve::getHostPrimes(lo.bottom, lo.top, lo.len, 0);
+      lo.d_primes = CudaSieve::getDevicePrimes(lo.bottom, lo.top, lo.len, 0);
 
       // Get primes P2 such that x/y > p > sqrt(x)
-      std::future<uint64_t *> fut = std::async(std::launch::async, CudaSieve::getDevicePrimes, hi.bottom, hi.top, std::ref(hi.len), 0);
+      hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
 
-      #pragma omp parallel for // calculate x/y for primes y < p < sqrt(x)
-      for(uint32_t i = 0; i < lo.len; i++)
-        lo.h_primes[i] = x/lo.h_primes[i];
+      divXbyY<<<lo.len/THREADS_PER_BLOCK + 1, THREADS_PER_BLOCK>>>(x, lo.d_primes, lo.len);
 
       cudaMalloc(&d_sums, lo.len*sizeof(uint64_t));
-      cudaMalloc(&lo.d_primes, lo.len*sizeof(uint64_t));
-
-      cudaMemcpy(lo.d_primes, lo.h_primes, lo.len*sizeof(uint64_t), cudaMemcpyHostToDevice);
-
-      hi.d_primes = fut.get();
 
       // this will return pi(x/p) - pi(hi.bottom) for all P1
       thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes+hi.len, lo.d_primes, lo.d_primes+lo.len, d_sums);
@@ -140,25 +136,31 @@ uint128_t P2(uint128_t x, uint128_t y)
 
       gap += lo.len + hi.len; // change ranges for next sieving interval
       hi.bottom = hi.top;
-      hi.top += MAX_RANGE;
+      hi.top += maxRange;
       lo.top = lo.bottom;
+
+      if(counter.isReset()){
+        size_t free, tot;
+        cudaMemGetInfo(&free, &tot);
+        if(2*free > tot + (1ull << 30)) maxRange *= 2;
+      }
 
       cudaFree(hi.d_primes);
       cudaFree(lo.d_primes);
       cudaFree(d_sums);
-      cudaFreeHost(lo.h_primes);
 
       std::cout << "\t" << (float)100*(hi.bottom - sqrt_x)/(top - sqrt_x) << "% complete         \r";
-      std::cout << "\t\t\t\t\tTotal: " << (__uint128_t) total << "\r";
+      std::cout << "\t\t\t\t\tTotal: " << total << "\r";
       std::cout << std::flush;
 
       counter.increment();
+
 
     }while(run);
     std::cout << std::endl;
     return total;
 }
-*/
+#endif
 
 // this is the faster P2 implementation and does all of the critical operations on
 // the GPU, however it is limited to 64 bit X due to CUDA's lack of native
@@ -176,7 +178,7 @@ uint64_t P2(uint64_t x, uint64_t y)
   PrimeArray hi, lo;
   lo.top = sqrt_x;
   hi.bottom = sqrt_x;
-  hi.top = sqrt_x + MAX_RANGE;
+  hi.top = sqrt_x + maxRange;
 
   ResetCounter counter;
 
@@ -205,7 +207,7 @@ uint64_t P2(uint64_t x, uint64_t y)
 
     gap += lo.len + hi.len; // change ranges for next sieving interval
     hi.bottom = hi.top;
-    hi.top += MAX_RANGE;
+    hi.top += maxRange;
     lo.top = lo.bottom;
 
     cudaFree(hi.d_primes);
@@ -217,13 +219,12 @@ uint64_t P2(uint64_t x, uint64_t y)
     std::cout << std::flush;
 
     counter.increment();
-
   }while(run);
   std::cout << std::endl;
   return total;
 }
 
-__global__ void divXbyY(uint64_t x, uint64_t * y, size_t len)
+__global__ void divXbyY(uint128_t x, uint64_t * y, size_t len)
 {
   uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
   if(tidx < len) y[tidx] = x/y[tidx];

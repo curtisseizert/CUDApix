@@ -6,15 +6,17 @@ Curtis Seizert <cseizert@gmail.com>
 */
 
 #include <gmpxx.h>
+#ifdef __CUDA_ARCH__
+#include "uint128_t.cu"
+#endif
 
 #ifndef _P2
 #define _P2
 
 #define THREADS_PER_BLOCK 256
-typedef unsigned __int128 uint128_t;
 
 uint64_t P2(uint64_t x, uint64_t y);
-uint128_t P2(uint128_t x, uint128_t y);
+mpz_class P2(uint128_t x, uint64_t sqrt_x, uint64_t y);
 mpz_class P2(mpz_class x, mpz_class y);
 
 
@@ -27,7 +29,8 @@ class ResetCounter{
 private:
   uint16_t counter = 0;
 public:
-  void increment();
+  inline void increment();
+  inline bool isReset(){return (bool) !counter;}
 };
 
 class x_Over_y{
@@ -37,7 +40,5 @@ public:
   __device__ __host__ x_Over_y(uint64_t x): x(x){}
   __device__ __host__ uint64_t operator() (uint64_t y) { return x / y;}
 };
-
-__global__ void divXbyY(uint64_t x, uint64_t * y, size_t len);
 
 #endif

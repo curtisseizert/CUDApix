@@ -11,19 +11,17 @@
 #include "trivial.cuh"
 #include "V.cuh"
 
-typedef unsigned __int128 uint128_t;
-
 int main()
 {
   uint64_t x, y, p2, pix, piy;
-  int64_t s3, * d_phi;
+  int64_t s3;
   x = pow(10,12);
   y = 10000;
-  uint32_t c = 6;
+  uint32_t c = 6, * d_phi;
 
   Phi phi(x/y, y);
 
-  d_phi = phi.generateRange()
+  d_phi = phi.generateRange((uint32_t) x/y, c);
 
   return 0;
 }

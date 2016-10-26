@@ -6,9 +6,7 @@ Curtis Seizert <cseizert@gmail.com>
 */
 
 #include <gmpxx.h>
-#ifdef __CUDA_ARCH__
-#include "uint128_t.cu"
-#endif
+#include "uint128_t.cuh"
 
 #ifndef _P2
 #define _P2
@@ -16,9 +14,11 @@ Curtis Seizert <cseizert@gmail.com>
 #define THREADS_PER_BLOCK 256
 
 uint64_t P2(uint64_t x, uint64_t y);
-mpz_class P2(uint128_t x, uint64_t sqrt_x, uint64_t y);
-mpz_class P2(mpz_class x, mpz_class y);
 
+
+uint128_t P2(uint128_t x, uint64_t y);
+
+// mpz_class P2(mpz_class x, mpz_class y);
 
 struct PrimeArray{
   uint64_t * h_primes, * d_primes, bottom, top, pi_bottom, pi_top, diff_pi;

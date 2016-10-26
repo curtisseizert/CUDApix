@@ -5,22 +5,26 @@
 #include <thrust/binary_search.h>
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
-#include <omp.h>
-#include <gmpxx.h>
-#include <future>
 
-#include "uint128_t.cu"
+#include "device128/device128.cuh"
+#include "uint128_t.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "P2.cuh"
 
-__global__ void divXbyY(uint128_t x, uint64_t * y, size_t len);
+uint64_t maxRange = 1ul << 33;
 
-uint64_t maxRange = 1ul << 33; // does not work as a define above x = 2^64
+
+#ifndef _UINT128_T_CUDA_H
+
+#include <omp.h>
+#include <gmpxx.h>
+#include <future>
 
 // this is a less efficient P2 implementation compared to the one below, but
 // it has the advantage of not being limited to a 64 bit x, which it accomplishes
 // by using the gmp library and performing the division operation x/p on the CPU
 // rather than the GPU as below
+
 mpz_class P2(mpz_class x, mpz_class y)
 {
   mpz_class z, total = 0; // z is a temp for conversion to uint64_t
@@ -94,13 +98,14 @@ mpz_class P2(mpz_class x, mpz_class y)
   std::cout << std::endl;
   return total;
 }
+#endif // #ifndef _UINT128_T_CUDA
 
-#ifdef _UINT128_T
-mpz_class P2(uint128_t x, uint64_t y, uint64_t sqrt_x)
+uint128_t P2(uint128_t x, uint64_t y)
 {
-    mpz_class total = 0;
+    uint128_t total = 0;
 
     uint64_t top = x/y;
+    uint64_t sqrt_x = uint128_t::sqrt(x);
 
     uint64_t * d_sums, gap = 0;
     bool run = 1;
@@ -124,7 +129,7 @@ mpz_class P2(uint128_t x, uint64_t y, uint64_t sqrt_x)
       // Get primes P2 such that x/y > p > sqrt(x)
       hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
 
-      divXbyY<<<lo.len/THREADS_PER_BLOCK + 1, THREADS_PER_BLOCK>>>(x, lo.d_primes, lo.len);
+      launch::divXbyY(x, lo.d_primes, lo.len);
 
       cudaMalloc(&d_sums, lo.len*sizeof(uint64_t));
 
@@ -132,7 +137,7 @@ mpz_class P2(uint128_t x, uint64_t y, uint64_t sqrt_x)
       thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes+hi.len, lo.d_primes, lo.d_primes+lo.len, d_sums);
 
       total += thrust::reduce(thrust::device, d_sums, d_sums+lo.len); // sum of pi(x/p) - pi(hi.bottom)
-      total += (lo.len+1)*lo.len/2 + lo.len*(gap); // sum(pi(lo.top) - pi(p)) + sum(pi(hi.bottom) - pi(lo.top))
+      total += ((lo.len+1)*lo.len/2 + lo.len*(gap)); // sum(pi(lo.top) - pi(p)) + sum(pi(hi.bottom) - pi(lo.top))
 
       gap += lo.len + hi.len; // change ranges for next sieving interval
       hi.bottom = hi.top;
@@ -160,7 +165,7 @@ mpz_class P2(uint128_t x, uint64_t y, uint64_t sqrt_x)
     std::cout << std::endl;
     return total;
 }
-#endif
+
 
 // this is the faster P2 implementation and does all of the critical operations on
 // the GPU, however it is limited to 64 bit X due to CUDA's lack of native
@@ -222,12 +227,6 @@ uint64_t P2(uint64_t x, uint64_t y)
   }while(run);
   std::cout << std::endl;
   return total;
-}
-
-__global__ void divXbyY(uint128_t x, uint64_t * y, size_t len)
-{
-  uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
-  if(tidx < len) y[tidx] = x/y[tidx];
 }
 
 void ResetCounter::increment()

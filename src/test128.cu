@@ -1,7 +1,6 @@
 #include <iostream>
 #include <math.h>
 #include <cuda_runtime.h>
-#include <gmpxx.h>
 
 #include "P2.cu"
 #include "S3.cuh"
@@ -12,22 +11,16 @@
 #include "P2.cuh"
 #include "trivial.cuh"
 #include "V.cuh"
+#include "src/device128/device128.cu"
 
 int main()
 {
-  mpz_class total;
-  uint128_t x;
-  uint64_t sqrt_x, y;
-  sqrt_x = 1152921504606846900;
-  std::cout << sqrt_x << std::endl;
-  y = 1234567897;
+  uint128_t x = 1, p2 = 0;
+  uint64_t y = 1015748248;
 
-  x = uint128_t::mul128(sqrt_x, sqrt_x);
+  x <<= 70;
 
-  std::cout << sqrt_x << " " << uint128_t::sqrt(x) << std::endl;
-
-  //total = P2(x, y, sqrt_x);
-
+  p2 = P2(x, y);
 
   return 0;
 }

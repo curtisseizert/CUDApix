@@ -5,7 +5,7 @@
 #include "S3.cuh"
 #include "phi.cuh"
 #include "S0.cuh"
-#include "CUDASieve/cudasieve.hpp"
+#include "uint128_t.cuh"
 #include "sieve/lpf_mu.cuh"
 #include "P2.cuh"
 #include "trivial.cuh"
@@ -13,15 +13,21 @@
 
 int main()
 {
-  uint64_t x, y, p2, pix, piy;
-  int64_t s3;
-  x = pow(10,12);
-  y = 10000;
-  uint32_t c = 6, * d_phi;
+    uint128_t x, /*p2,*/ s1_t;
+    uint64_t y = 16499370765;
 
-  Phi phi(x/y, y);
+    x = 1;
+    x <<= 80;
 
-  d_phi = phi.generateRange((uint32_t) x/y, c);
+    std::cout << x << std::endl;
 
-  return 0;
+    // p2 = P2(x, y);
+    //
+    // std::cout << p2 << std::endl;
+
+    s1_t = S1_trivial(x, y);
+
+    std::cout << s1_t << std::endl;
+
+    return 0;
 }

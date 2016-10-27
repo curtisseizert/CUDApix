@@ -15,10 +15,10 @@ CCFLAGS = -O2 std=c++11
 NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR)
-U128 = lib/libu128.a
+# U128 = lib/libu128.a
 LIBNAME = cudasieve
 CC_LIBS = -lm -lstdc++
-NVCC_LIBS = -lcudart $(CC_LIBS) -lu128 -l$(LIBNAME)
+NVCC_LIBS = -lcudart $(CC_LIBS) -l$(LIBNAME)
 
 CLI_SRC_DIR = src
 SRC_DIR = src
@@ -38,10 +38,10 @@ MAIN = pix
 CS_LIB = $(CUDASIEVE_DIR)/lib$(LIBNAME).a
 
 $(MAIN): $(OBJS) $(CS_LIB) $(MAIN_SRC) $(U128)
-	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) -L ./lib $(NVCC_LIBS) $(OBJS) $(MAIN_SRC) -o $@
+	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(NVCC_LIBS) $(OBJS) $(MAIN_SRC) -o $@
 
-$(U128): $(U128_SRC) $(U128_DEF)
-	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -lib $< -o $@
+# $(U128): $(U128_SRC) $(U128_DEF)
+# 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -lib $< -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
@@ -55,4 +55,4 @@ testu128: src/test128.cu
 	$(NVCC) $(NVCC_FLAGS) -g $(INCLUDES) -L $(CUDASIEVE_DIR) -I ./ $(CC_LIBS) -l$(LIBNAME) $^ -o $@
 
 clean:
-	rm -f obj/*.o cstest phi pix lib/*.a
+	rm -f obj/*.o cstest phi pix testu128 u128 lib/*.a

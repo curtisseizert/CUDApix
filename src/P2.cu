@@ -12,6 +12,8 @@
 #include "P2.cuh"
 
 uint64_t maxRange = 1ul << 33;
+const uint16_t threadsPerBlock = 256;
+
 
 
 #ifndef _UINT128_T_CUDA_H
@@ -129,7 +131,7 @@ uint128_t P2(uint128_t x, uint64_t y)
       // Get primes P2 such that x/y > p > sqrt(x)
       hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
 
-      launch::divXbyY(x, lo.d_primes, lo.len);
+      divXbyY(x, lo.d_primes, lo.len);
 
       cudaMalloc(&d_sums, lo.len*sizeof(uint64_t));
 
@@ -234,4 +236,15 @@ void ResetCounter::increment()
   counter += 1;
   counter &= 511;
   if(counter == 0) cudaDeviceReset();
+}
+
+void divXbyY(uint128_t x, uint64_t * y, size_t len)
+{
+  g_divXbyY<<<len/threadsPerBlock + 1, threadsPerBlock>>>(x, y, len);
+}
+
+__global__ void g_divXbyY(uint128_t x, uint64_t * y, size_t len)
+{
+  uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
+  if(tidx < len) y[tidx] = x/y[tidx];
 }

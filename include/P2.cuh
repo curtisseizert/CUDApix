@@ -20,6 +20,11 @@ uint128_t P2(uint128_t x, uint64_t y);
 
 // mpz_class P2(mpz_class x, mpz_class y);
 
+void divXbyY(uint128_t x, uint64_t * y, size_t len);
+
+__global__ void g_divXbyY(uint128_t x, uint64_t * y, size_t len);
+
+
 struct PrimeArray{
   uint64_t * h_primes, * d_primes, bottom, top, pi_bottom, pi_top, diff_pi;
   size_t len;

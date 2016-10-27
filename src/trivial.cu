@@ -91,7 +91,7 @@ uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbr
   lo.d_primes = CudaSieve::getDevicePrimes(lo.bottom, lo.top, lo.len, 0);
   hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
 
-  launch::xOverPSquared(lo.d_primes, x, lo.len);
+  xOverPSquared(lo.d_primes, x, lo.len);
 
   thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes + hi.len, lo.d_primes, lo.d_primes + lo.len, lo.d_primes);
 
@@ -105,4 +105,17 @@ uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbr
   cudaFree(hi.d_primes);
 
   return u;
+}
+
+void xOverPSquared(uint64_t * p, uint128_t x, size_t len)
+{
+  g_xOverPSquared<<<len/threadsPerBlock + 1, threadsPerBlock>>>(p, x, len);
+}
+
+
+__global__ void g_xOverPSquared(uint64_t * p, uint128_t x, size_t len)
+{
+  uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
+
+  if(tidx < len) p[tidx] = x / (p[tidx] * p[tidx]);
 }

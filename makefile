@@ -12,7 +12,7 @@ CCFLAGS = -O2 std=c++11
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
-NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g
+NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR)
 # U128 = lib/libu128.a
@@ -24,7 +24,7 @@ CLI_SRC_DIR = src
 SRC_DIR = src
 OBJ_DIR = obj
 
-_OBJS = P2.o trivial.o V.o sieve/lpf_mu.o S0.o phi.o S3.o
+_OBJS = P2.o trivial.o V.o sieve/lpf_mu.o S0.o phi.o S3.o li.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 
 PHI_SRC = src/utils/phi.cpp
@@ -36,6 +36,7 @@ MAIN_SRC = src/main.cpp
 PHI = phi
 MAIN = pix
 CS_LIB = $(CUDASIEVE_DIR)/lib$(LIBNAME).a
+PS = src/sieve/phisieve_device.o
 
 $(MAIN): $(OBJS) $(CS_LIB) $(MAIN_SRC) $(U128)
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(NVCC_LIBS) $(OBJS) $(MAIN_SRC) -o $@
@@ -53,6 +54,9 @@ $(PHI): $(PHI_SRC) $(CS_LIB)
 # test function
 testu128: src/test128.cu
 	$(NVCC) $(NVCC_FLAGS) -g $(INCLUDES) -L $(CUDASIEVE_DIR) -I ./ $(CC_LIBS) -l$(LIBNAME) $^ -o $@
+
+ps: src/sieve/phisieve_device.cu
+	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o src/sieve/phisieve_device.o $<
 
 clean:
 	rm -f obj/*.o cstest phi pix testu128 u128 lib/*.a

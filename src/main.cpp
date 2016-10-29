@@ -1,7 +1,11 @@
 #include <iostream>
 #include <math.h>
 #include <cuda_runtime.h>
+#include <stdint.h>
+#include <vector>
+#include <algorithm>
 
+#include "li.cuh"
 #include "S3.cuh"
 #include "phi.cuh"
 #include "S0.cuh"
@@ -11,23 +15,22 @@
 #include "trivial.cuh"
 #include "V.cuh"
 
+
 int main()
 {
-    uint128_t x, /*p2,*/ s1_t;
-    uint64_t y = 16499370765;
+    uint64_t x = pow(10, 10);
+    // uint64_t y = 10000;
+    // uint64_t s3;
 
-    x = 1;
-    x <<= 80;
-
-    std::cout << x << std::endl;
-
-    // p2 = P2(x, y);
+    // s3 = S3(x, y, 6);
     //
-    // std::cout << p2 << std::endl;
+    // std::cout << (int64_t)s3 << std::endl;
+    //
+    double lix, xd = (double) x;
 
-    s1_t = S1_trivial(x, y);
+    lix = li(x);
 
-    std::cout << s1_t << std::endl;
+    std::cout << lix << std::endl;
 
     return 0;
 }

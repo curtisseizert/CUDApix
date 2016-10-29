@@ -44,6 +44,10 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint32_t * d_lpf, uint32_t pr
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x)
       d_lpf[i + sieveWords*blockIdx.x] = s_lpf32[i];
+
+  __syncthreads();
+
+  if(threadIdx.x == 0 && blockIdx.x == 0) d_lpf[0] = (uint32_t) -1;
 }
 
 __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t primeListLength, uint16_t sieveWords, uint64_t bottom)
@@ -52,7 +56,7 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t pr
   __shared__ extern uint32_t s_lpf32[];
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
-     s_lpf32[i] = 1;
+     s_lpf32[i] = 2 * i + bstart + 1;
      for(uint16_t j = 0; j < numSmallPrimes; j++){
        if((2*i+1 + bstart) % smallPrimes[j] == 0) atomicMin((unsigned long long *)&s_lpf32[i], (unsigned long long)smallPrimes[j]);
      }
@@ -72,6 +76,10 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t pr
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x)
       d_lpf[i + sieveWords*blockIdx.x] = s_lpf32[i];
+
+  __syncthreads();
+
+  if(threadIdx.x == 0 && blockIdx.x == 0) d_lpf[0] = (uint64_t) -1;
 }
 
 __device__ void atomicMult(int32_t * addr, int32_t val)
@@ -200,6 +208,25 @@ template uint32_t * gen_d_lpf<uint32_t>(uint32_t bottom, uint32_t top);
 template uint64_t * gen_d_lpf<uint64_t>(uint64_t bottom, uint64_t top);
 
 template <typename T>
+T * gen_h_lpf(T bottom, T top)
+{
+  T * h_lpf, * d_lpf;
+  T arraySize = (top - bottom)/2 + 1;
+
+  d_lpf = gen_d_lpf(bottom, top);
+
+  h_lpf = (T *)malloc(arraySize * sizeof(T));
+  cudaMemcpy(h_lpf, d_lpf, arraySize * sizeof(T), cudaMemcpyDeviceToHost);
+
+  cudaFree(d_lpf);
+
+  return h_lpf;
+}
+
+template uint32_t * gen_h_lpf<uint32_t>(uint32_t bottom, uint32_t top);
+template uint64_t * gen_h_lpf<uint64_t>(uint64_t bottom, uint64_t top);
+
+template <typename T>
 int8_t * gen_d_mu(T bottom, T top)
 {
   uint16_t threads = 256, sieveWords = h_sieveBytes/(sizeof(T));
@@ -220,3 +247,22 @@ int8_t * gen_d_mu(T bottom, T top)
 
 template int8_t * gen_d_mu<uint32_t>(uint32_t bottom, uint32_t top);
 template int8_t * gen_d_mu<uint64_t>(uint64_t bottom, uint64_t top);
+
+template <typename T>
+int8_t * gen_h_mu(T bottom, T top)
+{
+  int8_t * h_mu, * d_mu;
+  T arraySize = (top - bottom)/2 + 1;
+
+  d_mu = gen_d_mu(bottom, top);
+
+  h_mu = (int8_t * )malloc(arraySize * sizeof(int8_t));
+  cudaMemcpy(h_mu, d_mu, arraySize * sizeof(int8_t), cudaMemcpyDeviceToHost);
+
+  cudaFree(d_mu);
+
+  return h_mu;
+}
+
+template int8_t * gen_h_mu<uint32_t>(uint32_t bottom, uint32_t top);
+template int8_t * gen_h_mu<uint64_t>(uint64_t bottom, uint64_t top);

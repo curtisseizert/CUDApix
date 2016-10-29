@@ -13,4 +13,10 @@ template <typename T>
 T* gen_d_lpf(T bottom, T top);
 
 template <typename T>
+T* gen_h_lpf(T bottom, T top);
+
+template <typename T>
 int8_t * gen_d_mu(T bottom, T top);
+
+template <typename T>
+int8_t * gen_h_mu(T bottom, T top);

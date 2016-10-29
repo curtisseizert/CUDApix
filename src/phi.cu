@@ -9,7 +9,7 @@
 #include "phi.cuh"
 
 //const uint16_t pi_lookup[20] = {0,0,1,2,2,3,3,4,4,4,4,5,5,6,6,6,6,7,7,8}; //starts at 0
-const uint16_t smallPrimes[13] = {1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+const uint16_t smallPrimes[13] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
 
 Phi::Phi(uint32_t max)
 {
@@ -41,7 +41,10 @@ Phi::~Phi()
 
 uint64_t Phi::phi(uint32_t x, uint32_t a)
 {
-  uint32_t y = h_primeList[a];
+  uint32_t y;
+  if(a > 12) y = h_primeList[a - 12];
+  else y = smallPrimes[a];
+
   uint64_t count, x_corr = (x - (x & 1ull))/2;
 
   greater_than_n op_(y);
@@ -81,12 +84,20 @@ uint32_t * Phi::generateRange(uint32_t num, uint32_t a)
   cudaMalloc(&d_phi, num * sizeof(uint32_t));
 
   isGreaterThan<<<blocks, threads>>>(num, d_lpf, d_phi, y);
+  //addOneToStart<<<1,1>>>(d_phi);
+
+  cudaDeviceSynchronize();
 
   thrust::inclusive_scan(thrust::device, d_phi, d_phi + num, d_phi);
 
   cudaDeviceSynchronize();
 
   return d_phi;
+}
+
+__global__ void addOneToStart(uint32_t * a)
+{
+  if(threadIdx.x == 0) a[0]++;
 }
 
 __global__ void isGreaterThan(uint32_t num, uint32_t * d_arrayIn, uint32_t * d_arrayOut, uint32_t value)

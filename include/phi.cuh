@@ -3,6 +3,8 @@
 #pragma once
 
 __global__ void isGreaterThan(uint32_t num, uint32_t * d_arrayIn, uint32_t * d_arrayOut, uint32_t value);
+__global__ void addOneToStart(uint32_t * a);
+
 
 class greater_than_n{
 private:

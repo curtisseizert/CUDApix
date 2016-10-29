@@ -6,7 +6,6 @@
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
 
-#include "device128/device128.cuh"
 #include "uint128_t.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "P2.cuh"

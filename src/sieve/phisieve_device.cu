@@ -1,79 +1,78 @@
 #include <cuda.h>
 #include <math_functions.h>
 #include <stdint.h>
+#include <stdio.h>
 
+#include "sieve/phisieve_constants.cu"
 #include "sieve/phisieve_device.cuh"
 
-__constant__ uint32_t p3[3] =    {0x92492492, 0x24924924, 0x49249249};
-__constant__ uint32_t p5[5] =    {0x08421084, 0x42108421, 0x10842108, 0x84210842, 0x21084210};
-__constant__ uint32_t p7[7] =    {0x81020408, 0x08102040, 0x40810204, 0x04081020, 0x20408102, 0x02040810, 0x10204081};
-__constant__ uint32_t p11[11] =  {0x08010020, 0x10020040, 0x20040080, 0x40080100, 0x80100200, 0x00200400, 0x00400801,
-                                  0x00801002, 0x01002004, 0x02004008, 0x04008010};
-__constant__ uint32_t p13[13] =  {0x00080040, 0x04002001, 0x00100080, 0x08004002, 0x00200100, 0x10008004, 0x00400200,
-                                  0x20010008, 0x00800400, 0x40020010, 0x01000800, 0x80040020, 0x02001000};
-__constant__ uint32_t p17[17] =  {0x02000100, 0x08000400, 0x20001000, 0x80004000, 0x00010000, 0x00040002, 0x00100008,
-                                  0x00400020, 0x01000080, 0x04000200, 0x10000800, 0x40002000, 0x00008000, 0x00020001,
-                                  0x00080004, 0x00200010, 0x00800040};
-__constant__ uint32_t p19[19] =  {0x10000200, 0x00008000, 0x00200004, 0x08000100, 0x00004000, 0x00100002, 0x04000080,
-                                  0x00002000, 0x00080001, 0x02000040, 0x80001000, 0x00040000, 0x01000020, 0x40000800,
-                                  0x00020000, 0x00800010, 0x20000400, 0x00010000, 0x00400008};
-__constant__ uint32_t p23[23] =  {0x00000800, 0x02000004, 0x00010000, 0x40000080, 0x00200000, 0x00001000, 0x04000008,
-                                  0x00020000, 0x80000100, 0x00400000, 0x00002000, 0x08000010, 0x00040000, 0x00000200,
-                                  0x00800001, 0x00004000, 0x10000020, 0x00080000, 0x00000400, 0x01000002, 0x00008000,
-                                  0x20000040, 0x00100000};
-__constant__ uint32_t p29[29] =  {0x00004000, 0x00000800, 0x00000100, 0x00000020, 0x80000004, 0x10000000, 0x02000000,
-                                  0x00400000, 0x00080000, 0x00010000, 0x00002000, 0x00000400, 0x00000080, 0x00000010,
-                                  0x40000002, 0x08000000, 0x01000000, 0x00200000, 0x00040000, 0x00008000, 0x00001000,
-                                  0x00000200, 0x00000040, 0x00000008, 0x20000001, 0x04000000, 0x00800000, 0x00100000,
-                                  0x00020000};
-__constant__ uint32_t p31[31] =  {0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400, 0x00000200,
-                                  0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008, 0x00000004,
-                                  0x00000002, 0x80000001, 0x40000000, 0x20000000, 0x10000000, 0x08000000, 0x04000000,
-                                  0x02000000, 0x01000000, 0x00800000, 0x00400000, 0x00200000, 0x00100000, 0x00080000,
-                                  0x00040000, 0x00020000, 0x00010000};
-__constant__ uint32_t p37[37] =  {0x00040000, 0x00800000, 0x10000000, 0x00000000, 0x00000002, 0x00000040, 0x00000800,
-                                  0x00010000, 0x00200000, 0x04000000, 0x80000000, 0x00000000, 0x00000010, 0x00000200,
-                                  0x00004000, 0x00080000, 0x01000000, 0x20000000, 0x00000000, 0x00000004, 0x00000080,
-                                  0x00001000, 0x00020000, 0x00400000, 0x08000000, 0x00000000, 0x00000001, 0x00000020,
-                                  0x00000400, 0x00008000, 0x00100000, 0x02000000, 0x40000000, 0x00000000, 0x00000008,
-                                  0x00000100, 0x00002000};
-
-__constant__ uint16_t d_smallPrimes[11] = {3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-
-__constant__ uint32_t *d_bitmask[11] = {&p3[0], &p5[0], &p7[0], &p11[0], &p13[0], &p17[0],
-                                      &p19[0], &p23[0], &p29[0], &p31[0], &p37[0]};
-
-__global__ void phisieve_device::sieveCountInit( uint32_t * sieve,
-                                                 int32_t * count
-                                                 uint64_t bstart,
-                                                 uint16_t c)
+__device__
+void phidev::sieveCountInit(uint32_t * d_sieve, uint32_t * d_count,
+                            uint64_t bstart, uint16_t c)
 {
   uint64_t j = bstart/64 + threadIdx.x + blockIdx.x*blockDim.x;
+  uint32_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
   uint32_t s = 0;
   s = d_bitmask[0][j % d_smallPrimes[0]];
   for(uint16_t a = 1; a < c - 1; a++)
     s |= d_bitmask[a][j % d_smallPrimes[a]];
-  sieve[j] = s;
+  d_sieve[tidx] = s;
 
   #pragma unroll 32
   for(uint16_t i = 0; i < 32; i++)
-    count[32 * j + i] = 1u & ~(s >> i);
+    d_count[32 * tidx + i] = 1u & ~(s >> i);
 }
 
-__device__ void phisieve_device::countInit(int32_t * count)
+__device__
+void phidev::markSmallPrimes(uint32_t * d_sieve, uint64_t bstart, uint16_t c)
 {
-  uint32_t tidx32 = 32 * threadIdx.x + blockIdx.x * blockDim.x;
-  #pragma unroll 32
-  for(uint8_t i = 0; i < 32; i++)
-    counter[tidx32 + i] = (tidx32 + i + 1) & ~(tidx32 + i);
+  uint64_t j = bstart/64 + threadIdx.x + blockIdx.x*blockDim.x;
+  uint32_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
+  d_sieve[tidx] |= d_bitmask[c - 1][j % d_smallPrimes[c - 1]];
 }
 
-__global__ void phisieve_device::countFinit(uint)
+__device__
+void phidev::markMedPrimes(uint32_t * d_sieve, uint32_t p, uint64_t bstart,
+                           uint32_t sieveBits)
 {
-  uint32_t tidx32 = 32 * threadIdx.x + blockIdx.x * blockDim.x;
+  bstart += 2 * (threadIdx.x + blockIdx.x * blockDim.x) * sieveBits;
+  uint32_t off = p - bstart % p;
+  if(off%2==0) off += p;
+  off = off >> 1; // convert offset to align with half d_sieve
+  for(; off < sieveBits; off += p) atomicOr(&d_sieve[(bstart >> 1) + (off >> 5)], (1u << (off & 31)));
+}
+
+__global__
+void phiglobal::sieveCountInit(uint32_t * d_sieve, uint32_t * d_count,
+                               uint64_t bstart, uint16_t c)
+
+{
+  phidev::sieveCountInit(d_sieve, d_count, bstart, c);
+  __syncthreads();
+}
+
+__global__
+void phiglobal::markSmallPrimes(uint32_t * d_sieve, uint64_t bstart, uint16_t c)
+{
+  phidev::markSmallPrimes(d_sieve, bstart, c);
+  __syncthreads();
+}
+
+__global__
+void phiglobal::markMedPrimes(uint32_t * d_sieve, uint32_t p, uint64_t bstart,
+                              uint32_t sieveBits)
+{
+  phidev::markMedPrimes(d_sieve, p, bstart, sieveBits);
+  __syncthreads();
+}
+
+__global__
+void phiglobal::updateCount(uint32_t * d_sieve, uint32_t * d_count)
+{
+  uint32_t tidx = threadIdx.x + blockIdx.x * blockDim.x;
+  uint32_t s = d_sieve[tidx];
+
   #pragma unroll 32
-  for(uint8_t i = 0; i < 32; i++){
-    uint32_t n = tidx32 + i;
-    for(uint32_t j = (n + 1) & ~n; j >>= 1; j &= j - 1)
-  }
+  for(uint16_t i = 0; i < 32; i++)
+    d_count[32 * tidx + i] = 1u & ~(s >> i);
 }

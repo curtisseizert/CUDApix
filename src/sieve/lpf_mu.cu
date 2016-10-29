@@ -9,7 +9,10 @@
 #include "sieve/lpf_mu.cuh"
 
 /*
+
+**To do**
 - make a version of lpf that only goes up to the nth prime
+- fix 64 bit mobius function
 
  */
 
@@ -102,7 +105,9 @@ __device__ void atomicMult(int64_t * addr, int64_t val)
   }while(assumed != old);
 }
 
-__global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeListLength, uint16_t sieveWords, uint32_t bottom)
+__global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
+                          uint32_t primeListLength, uint16_t sieveWords,
+                          uint32_t bottom)
 {
   uint32_t bstart = 2 * blockIdx.x * sieveWords + bottom;
   __shared__ extern int32_t s_mu32[];
@@ -143,9 +148,12 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeL
   }
 }
 
-__global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeListLength, uint16_t sieveWords, uint64_t bottom)
+// 64 bit mu - not working!!
+__global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
+                          uint32_t primeListLength, uint16_t sieveWords,
+                          uint64_t bottom)
 {
-  uint32_t bstart = 2 * blockIdx.x * sieveWords + bottom;
+  uint64_t bstart = 2 * blockIdx.x * sieveWords + bottom;
   __shared__ extern int64_t s_mu64[];
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
@@ -163,7 +171,7 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeL
       uint32_t off = p - bstart % p;
       if(off%2==0) off += p;
       off = off >> 1;
-      for(; off < sieveWords; off += p) atomicMult(&s_mu64[off], -p);
+      for(; off < sieveWords; off += p) atomicMult(&s_mu64[off], (int64_t)-p);
   }
 
   for(uint32_t i = threadIdx.x; i < primeListLength; i+= blockDim.x){
@@ -171,13 +179,13 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu, uint32_t primeL
       uint32_t off = p_squared - bstart % p_squared;
       if(off%2==0) off += p_squared;
       off = off >> 1;
-      for(; off < sieveWords; off += p_squared) atomicExch((unsigned long long *)&s_mu64[off], (unsigned long long int) 0);
+      for(; off < sieveWords; off += p_squared) atomicExch((long long unsigned*)&s_mu64[off], 0ull);
   }
 
   __syncthreads();
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
-    if(abs(s_mu64[i]) != 2 * i + bstart + 1) s_mu64[i] *= -1;
+    if(abs(s_mu64[i]) != (uint32_t)(2 * i + bstart + 1)) s_mu64[i] *= -1;
     if(s_mu64[i] == 0)          d_mu[i + sieveWords*blockIdx.x] = 0;
     else if(s_mu64[i] < 0)      d_mu[i + sieveWords*blockIdx.x] = -1;
     else if(s_mu64[i] > 0)      d_mu[i + sieveWords*blockIdx.x] = 1;

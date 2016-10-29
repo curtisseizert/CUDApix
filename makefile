@@ -24,7 +24,8 @@ CLI_SRC_DIR = src
 SRC_DIR = src
 OBJ_DIR = obj
 
-_OBJS = P2.o trivial.o V.o sieve/lpf_mu.o S0.o phi.o S3.o li.o
+_OBJS = P2.o trivial.o V.o sieve/lpf_mu.o S0.o phi.o S3.o li.o sieve/phisieve_device.o \
+ sieve/phisieve_host.o mutest.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 
 PHI_SRC = src/utils/phi.cpp
@@ -38,18 +39,18 @@ MAIN = pix
 CS_LIB = $(CUDASIEVE_DIR)/lib$(LIBNAME).a
 PS = src/sieve/phisieve_device.o
 
-$(MAIN): $(OBJS) $(CS_LIB) $(MAIN_SRC) $(U128)
-	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(NVCC_LIBS) $(OBJS) $(MAIN_SRC) -o $@
-
-# $(U128): $(U128_SRC) $(U128_DEF)
-# 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -lib $< -o $@
+$(MAIN): $(MAIN_SRC) $(OBJS) $(CS_LIB)
+	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(NVCC_LIBS) $(OBJS) $(MAIN_SRC) -o $@
+	@echo "     CXX/CUDA " $<
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu
-	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
+	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
+	@echo "     CUDA     " $<
 
 # answer check function
 $(PHI): $(PHI_SRC) $(CS_LIB)
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(CC_LIBS) -l$(LIBNAME) $< -o $@
+	@echo "     CUDA     " $<
 
 # test function
 testu128: src/test128.cu
@@ -59,4 +60,4 @@ ps: src/sieve/phisieve_device.cu
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o src/sieve/phisieve_device.o $<
 
 clean:
-	rm -f obj/*.o cstest phi pix testu128 u128 lib/*.a
+	rm -f obj/*.o obj/sieve/*.o cstest phi pix testu128 u128 lib/*.a

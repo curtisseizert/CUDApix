@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "sieve/S2_hard_host.cuh"
 #include "mutest.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "sieve/phisieve_host.cuh"
@@ -20,11 +21,11 @@
 
 int main()
 {
-    uint64_t x = pow(10, 12), y = 10000;
+    uint64_t x = pow(10,12), y = 69482;
     uint32_t c = 6;
     uint64_t s3 = 0;
 
-    s3 = S3(x, y, c);
+    s3 = S2hardHost::S2hard(x, y, c);
 
     std::cout << (int64_t)s3 << std::endl;
 

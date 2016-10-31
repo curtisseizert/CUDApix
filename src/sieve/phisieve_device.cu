@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "sieve/phisieve_constants.cu"
+#include "sieve/phisieve_constants.cuh"
 #include "sieve/phisieve_device.cuh"
 
 __device__

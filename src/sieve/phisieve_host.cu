@@ -4,7 +4,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 
-#include "CUDASieve/cudasieve.hpp" // I'm pretty sure this only works because of a #include in the header
+#include "CUDASieve/cudasieve.hpp"
+#include "CUDASieve/launch.cuh"
 #include "sieve/phisieve_device.cuh"
 #include "sieve/phisieve_host.cuh"
 

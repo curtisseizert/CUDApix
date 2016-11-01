@@ -29,5 +29,6 @@ int main()
 
     std::cout << (int64_t)s3 << std::endl;
 
+    cudaDeviceReset();
     return 0;
 }

@@ -10,7 +10,7 @@ __global__ void gen::zero(T * array, U max)
 
   if(tidx< max) array[tidx] = 0;
 }
-
+template __global__ void gen::zero<int16_t, uint32_t>(int16_t *, uint32_t);
 template __global__ void gen::zero<uint64_t, uint32_t>(uint64_t *, uint32_t);
 
 template<typename T, typename U>

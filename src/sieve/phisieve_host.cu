@@ -5,7 +5,7 @@
 #include <thrust/scan.h>
 
 #include "CUDASieve/cudasieve.hpp"
-#include "CUDASieve/launch.cuh"
+#include "CUDASieve/primelist.cuh"
 #include "sieve/phisieve_device.cuh"
 #include "sieve/phisieve_host.cuh"
 

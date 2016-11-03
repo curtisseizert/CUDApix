@@ -3,7 +3,7 @@
 #include <thrust/scan.h>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
-#include <CUDASieve/cudasieve.hpp>
+#include <CUDASieve/primelist.cuh>
 
 #include "sieve/lpf_mu.cuh"
 #include "phi.cuh"

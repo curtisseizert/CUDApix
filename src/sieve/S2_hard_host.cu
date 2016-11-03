@@ -6,6 +6,7 @@
 
 #include <CUDASieve/cudasieve.hpp>
 #include <CUDASieve/host.hpp>
+#include <CUDASieve/primelist.cuh>
 
 #include "general/tools.hpp"
 #include "general/device_functions.cuh"
@@ -16,14 +17,16 @@
 
 #include <cuda_profiler_api.h>
 
-const uint16_t h_cutoff = 12;
 const uint16_t h_threadsPerBlock = 256;
-const uint32_t blockSpan = 1024 * 64;
 
 S2hardHost::S2hardHost(uint64_t x, uint64_t y, uint16_t c)
 {
   makeData(x, y, c);
   allocate();
+
+  gen::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[0]>>>(data->d_totals, h_cdata.elPerBlock);
+
+  zero();
 }
 
 S2hardHost::~S2hardHost()
@@ -35,35 +38,53 @@ void S2hardHost::makeData(uint64_t x, uint64_t y, uint16_t c)
 {
   cudaMallocManaged((void **)&data, sizeof(S2data_64));
   cudaDeviceSynchronize();
-  data->x = x;
-  data->y = y;
-  data->c = c;
-  data->bstart = 0;
-  data->mstart = 1;
-  data->blocks = std::min(1 + (uint32_t)(x/y)/blockSpan, 512u); // must be <= 1024
+  h_cdata.x = x;
+  h_cdata.y = y;
+  h_cdata.z = x/y;
+  h_cdata.c = c;
+  h_cdata.sieveWords = sieveWords_;
+  h_cdata.bstart = 0;
+  h_cdata.mstart = 1;
+  h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512u); // must be <= 1024
 
-  uint32_t maxPrime = sqrt(y);
-  data->d_primeList = PrimeList::getSievingPrimes(maxPrime, data->primeListLength, 1);
-  data->elPerBlock = data->primeListLength + h_cutoff;
+  h_cdata.maxPrime = sqrt(h_cdata.z);
+  data->d_primeList = CudaSieve::getDevicePrimes32(0, h_cdata.maxPrime, h_cdata.primeListLength, 0);
+  data->d_bitsieve = CudaSieve::genDeviceBitSieve(0, y, 0);
+  h_cdata.elPerBlock = h_cdata.primeListLength - 2;
+
+  transferConstants();
 
   data->d_mu = gen_d_mu((uint32_t)0, (uint32_t)y);
   data->d_lpf = gen_d_lpf((uint32_t)0, (uint32_t)y);
 }
 
+void S2hardHost::setupNextIter()
+{
+  // if(h_cdata.sieveWords < 4096) h_cdata.sieveWords += 1024;
+  h_cdata.bstart += h_cdata.blocks * (64 * h_cdata.sieveWords);
+  h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z - h_cdata.bstart)/(64 * h_cdata.sieveWords), 512u);
+
+  transferConstants();
+  zero();
+}
+
 void S2hardHost::allocate()
 {
-  cudaMalloc(&data->d_sums, data->elPerBlock * data->blocks * sizeof(uint64_t));
-  cudaMalloc(&data->d_partialsums, data->blocks * sizeof(int64_t));
-  cudaMalloc(&data->d_num, data->elPerBlock * data->blocks * sizeof(int16_t));
-  cudaMalloc(&data->d_totals, data->elPerBlock * sizeof(uint64_t));
-  cudaMalloc(&data->d_totalsNext, data->elPerBlock * sizeof(uint64_t));
+  for(uint16_t i = 0; i < numStreams_; i++)
+    cudaStreamCreate(&stream[i]);
+  cudaMalloc(&data->d_sums, h_cdata.elPerBlock * h_cdata.blocks * sizeof(uint64_t));
+  cudaMalloc(&data->d_partialsums, h_cdata.blocks * sizeof(int64_t));
+  cudaMalloc(&data->d_num, h_cdata.elPerBlock * h_cdata.blocks * sizeof(int16_t));
+  cudaMalloc(&data->d_totals, h_cdata.elPerBlock * sizeof(uint64_t));
+  cudaMalloc(&data->d_totalsNext, h_cdata.elPerBlock * sizeof(uint64_t));
+}
 
-  cudaMemset(data->d_sums, data->elPerBlock * data->blocks * sizeof(int64_t), 0); // todo: implement streams here
-  cudaMemset(data->d_partialsums, data->blocks * sizeof(int64_t), 0);
-  gen::zero<<<data->elPerBlock, data->blocks>>>(data->d_num, data->elPerBlock * data->blocks);
-  gen::zero<<<1 + data->elPerBlock/512, 512>>>(data->d_totals, data->elPerBlock);
-  gen::zero<<<1 + data->elPerBlock/512, 512>>>(data->d_totalsNext, data->elPerBlock);
-
+void S2hardHost::zero()
+{
+  gen::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[1]>>>(data->d_totalsNext, h_cdata.elPerBlock);
+  gen::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[2]>>>(data->d_sums, h_cdata.elPerBlock * h_cdata.blocks);
+  gen::zero<<<1 + h_cdata.blocks/512, 512, 0, stream[3]>>>(data->d_partialsums, h_cdata.blocks);
+  gen::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[4]>>>(data->d_num, h_cdata.elPerBlock * h_cdata.blocks);
 }
 
 void S2hardHost::deallocate()
@@ -80,38 +101,36 @@ void S2hardHost::deallocate()
 
 int64_t S2hardHost::launchIter()
 {
-  KernelTime timer;
   int64_t s2_hard = 0;
-  timer.start();
+
   cudaProfilerStart();
-  S2glob::S2ctl<<<data->blocks, h_threadsPerBlock>>>(data);
+  S2glob::S2ctl<<<h_cdata.blocks, h_threadsPerBlock, h_cdata.sieveWords*sizeof(uint32_t)>>>(data);//, bstart, h_cdata.sieveWords);
   cudaProfilerStop();
   cudaDeviceSynchronize();
-  timer.stop();
-  timer.displayTime();
 
-  // dispDevicePartialSums(data->d_sums, data->blocks*data->elPerBlock, data->blocks);
-  // dispDeviceArray(data->d_sums, data->blocks*data->elPerBlock);
+  // dispDevicePartialSums(data->d_sums, h_cdata.blocks*h_cdata.elPerBlock, h_cdata.blocks);
+  // dispDeviceArray(data->d_totals, 20u);
 
-  S2glob::scanVectorized<<<data->elPerBlock, data->blocks, data->blocks*sizeof(int64_t)>>>(data->d_sums, data->d_totalsNext);
+  S2glob::scanVectorized<<<h_cdata.elPerBlock, h_cdata.blocks, h_cdata.blocks*sizeof(int64_t)>>>(data->d_sums, data->d_totalsNext);
   cudaDeviceSynchronize();
 
-  // dispDeviceArray(data->d_totalsNext, data->elPerBlock);
-
-  S2glob::addMultiply<<<data->elPerBlock, data->blocks>>>(data->d_sums, data->d_totals, data->d_num);
+  S2glob::addMultiply<<<h_cdata.elPerBlock, h_cdata.blocks>>>(data->d_sums, data->d_totals, data->d_num);
   cudaDeviceSynchronize();
 
-  uint64_t * dummy = data->d_totals;
-  data->d_totals = data->d_totalsNext;
-  data->d_totalsNext = dummy;
+  S2glob::addArrays<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[1]>>>(data->d_totals, data->d_totalsNext, h_cdata.blocks);
 
-  dispDevicePartialSums(data->d_num, (data->blocks * data->elPerBlock), data->blocks);
+  dispDevicePartialSums(data->d_num, (h_cdata.blocks * h_cdata.elPerBlock), h_cdata.blocks);
+  // dispDevicePartialSums(data->d_sums, h_cdata.blocks*h_cdata.elPerBlock, h_cdata.blocks);
 
-  s2_hard = thrust::reduce(thrust::device, data->d_partialsums, data->d_partialsums + data->blocks);
-
+  s2_hard = thrust::reduce(thrust::device, data->d_partialsums, data->d_partialsums + h_cdata.blocks);
   std::cout << s2_hard << std::endl;
 
-  s2_hard += thrust::reduce(thrust::device, data->d_sums, data->d_sums + (data->blocks * data->elPerBlock));
+  s2_hard += thrust::reduce(thrust::device, data->d_sums, data->d_sums + (h_cdata.blocks * h_cdata.elPerBlock));
+  cudaDeviceSynchronize();
+
+  // std::cout << "\t" <<100 * h_cdata.bstart/h_cdata.z << "% complete\r";
+  // std::cout << std::flush;
+  //
 
   return s2_hard;
 }
@@ -121,18 +140,18 @@ uint64_t S2hardHost::S2hard(uint64_t x, uint64_t y, uint16_t c)
   uint64_t sum = 0;
 
   S2hardHost * s2h = new S2hardHost(x, y, c);
+  KernelTime timer;
+  timer.start();
 
   sum += s2h->launchIter();
 
-  // int32_t * d_test;
-  // cudaMalloc(&d_test, 1024);
-  //
-  // gen::set<<<1, 256>>>(d_test, 256u, 1);
-  //
-  // testRed<<<1, 256>>>(d_test);
-  // cudaDeviceSynchronize();
-  //
-  // dispDeviceArray(d_test, 256u);
+  s2h->setupNextIter();
 
+  while(s2h->h_cdata.bstart < s2h->h_cdata.z){
+    sum += s2h->launchIter();
+    s2h->setupNextIter();
+  }
+  timer.stop();
+  timer.displayTime();
   return sum;
 }

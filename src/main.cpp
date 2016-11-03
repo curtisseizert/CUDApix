@@ -5,8 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "general/tools.hpp"
 #include "sieve/S2_hard_host.cuh"
-#include "mutest.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "sieve/phisieve_host.cuh"
 #include "S3.cuh"
@@ -21,7 +21,7 @@
 
 int main()
 {
-    uint64_t x = pow(10,12), y = 69482;
+    uint64_t x = pow(10,10), y = 8197;
     uint32_t c = 6;
     uint64_t s3 = 0;
 
@@ -29,6 +29,5 @@ int main()
 
     std::cout << (int64_t)s3 << std::endl;
 
-    cudaDeviceReset();
     return 0;
 }

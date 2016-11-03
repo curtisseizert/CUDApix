@@ -14,9 +14,8 @@ CCFLAGS = -O2 -std=c++11
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
 NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
-DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills
+DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills -g -lineinfo
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR) -I ./
-# U128 = lib/libu128.a
 LIBNAME = cudasieve
 CC_LIBS = -lm -lstdc++
 NVCC_LIBS = -lcudart $(CC_LIBS) -l$(LIBNAME)
@@ -53,6 +52,9 @@ CS_LIB = $(CUDASIEVE_DIR)/lib$(LIBNAME).a
 $(MAIN): $(OBJS) $(CS_LIB)
 	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(NVCC_LIBS) $(OBJS) -o $@
 	@echo "     CUDA     " $@
+
+$(CS_LIB):
+	@+ ./build_cudasieve.sh $(CUDASIEVE_DIR) libcudasieve.a
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu
 	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<

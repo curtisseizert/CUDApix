@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <math_functions.h>
 #include <CUDASieve/launch.cuh>
+#include <CUDASieve/primelist.cuh>
 #include <CUDASieve/cudasieve.hpp>
 
 #include "sieve/lpf_mu.cuh"

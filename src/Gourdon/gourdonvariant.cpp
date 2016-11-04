@@ -41,7 +41,10 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
 
   a = pi_gourdon->A();
   std::cout << "A = " << a << "\n" << std::endl;
-
+  // 
+  // a = pi_gourdon->checkA();
+  // std::cout << "Checked A = " << a << "\n" << std::endl;
+  //
   // b = pi_gourdon->B();
   // std::cout << "B = " << b << "\n" << std::endl;
   //
@@ -52,6 +55,6 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
   // std::cout << "phi_0 = " << p0 << "\n" << std::endl;
   //
 
-  return a - b + p0 + s;
+  return a;// - b + p0 + s;
 
 }

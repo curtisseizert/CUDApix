@@ -35,6 +35,7 @@ _OBJS =\
  S3.o \
  li.o \
  mutest.o \
+ pitable.o \
  sieve/phisieve_device.o \
  sieve/phisieve_host.o \
  sieve/S2_hard_host.o \

@@ -9,7 +9,7 @@
 
 int main()
 {
-    uint64_t x = pow(10,10), y = 8197, pi = 0;
+    uint64_t x = pow(2, 60), y = 30737235, pi = 0;
     uint32_t c = 6;
     uint64_t s3 = 0;
 

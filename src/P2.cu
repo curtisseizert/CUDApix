@@ -9,6 +9,8 @@
 #include "uint128_t.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "P2.cuh"
+#include "cudapix.hpp"
+#include "general/device_functions.cuh"
 
 uint64_t maxRange = 1ul << 33;
 const uint16_t threadsPerBlock = 256;
@@ -230,20 +232,7 @@ uint64_t P2(uint64_t x, uint64_t y)
   return total;
 }
 
-void ResetCounter::increment()
-{
-  counter += 1;
-  counter &= 511;
-  if(counter == 0) cudaDeviceReset();
-}
-
 void divXbyY(uint128_t x, uint64_t * y, size_t len)
 {
-  g_divXbyY<<<len/threadsPerBlock + 1, threadsPerBlock>>>(x, y, len);
-}
-
-__global__ void g_divXbyY(uint128_t x, uint64_t * y, size_t len)
-{
-  uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
-  if(tidx < len) y[tidx] = x/y[tidx];
+  global::divXbyY<<<len/threadsPerBlock + 1, threadsPerBlock>>>(x, y, len);
 }

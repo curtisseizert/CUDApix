@@ -10,14 +10,14 @@
 
 #include "sieve/phisieve_host.cuh"
 #include "phi.cuh"
-#include "S0.cuh"
+#include "ordinary.cuh"
 #include "sieve/lpf_mu.cuh"
 
 __constant__ uint16_t d_small[8] = {2, 3, 5, 7, 11, 13, 17, 19};
 __constant__ uint32_t d_wheel[8] = {2, 6, 30, 210, 2310, 30030, 510510, 9699690};
 __constant__ uint32_t d_totient[8] = {1, 2, 8, 48, 480, 5760, 92160, 1658880};
 
-uint64_t S0(uint64_t x, uint64_t y, uint16_t c)
+uint64_t ordinary(uint64_t x, uint64_t y, uint16_t c)
 {
   c--;
   uint16_t threads = 256;
@@ -39,7 +39,7 @@ uint64_t S0(uint64_t x, uint64_t y, uint16_t c)
   cudaMalloc(&d_quot, arraySize * sizeof(int64_t));
   cudaMemset(d_quot, arraySize * sizeof(int64_t), 0);
 
-  S0kernel<<<1 + arraySize/threads, threads>>>(d_mu, d_quot, d_lpf, d_phi, x, y, c);
+  ordinaryKernel<<<1 + arraySize/threads, threads>>>(d_mu, d_quot, d_lpf, d_phi, x, y, c);
 
   cudaDeviceSynchronize();
   sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
@@ -54,7 +54,7 @@ uint64_t S0(uint64_t x, uint64_t y, uint16_t c)
   return sum;
 }
 
-uint128_t S0(uint128_t x, uint64_t y, uint16_t c)
+uint128_t ordinary(uint128_t x, uint64_t y, uint16_t c)
 {
   c--;
   uint16_t threads = 256;
@@ -76,7 +76,7 @@ uint128_t S0(uint128_t x, uint64_t y, uint16_t c)
   cudaMalloc(&d_quot, arraySize * sizeof(int64_t));
   cudaMemset(d_quot, arraySize * sizeof(int64_t), 0);
 
-  S0kernel<<<1 + arraySize/threads, threads>>>(d_mu, d_quot, d_lpf, d_phi, x, y, c);
+  ordinaryKernel<<<1 + arraySize/threads, threads>>>(d_mu, d_quot, d_lpf, d_phi, x, y, c);
 
   cudaDeviceSynchronize();
   sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
@@ -91,7 +91,7 @@ uint128_t S0(uint128_t x, uint64_t y, uint16_t c)
   return sum;
 }
 
-__global__ void S0kernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf, uint32_t * d_phi, uint64_t x, uint64_t y, uint16_t c)
+__global__ void ordinaryKernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf, uint32_t * d_phi, uint64_t x, uint64_t y, uint16_t c)
 {
   uint64_t tidx = threadIdx.x + blockIdx.x * blockDim.x;
   uint64_t n = 2 * tidx + 1;
@@ -108,7 +108,7 @@ __global__ void S0kernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf, uint
 }
 
 // 128 bit -- in progress
-__global__ void S0kernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf, uint32_t * d_phi, uint128_t x, uint64_t y, uint16_t c)
+__global__ void ordinaryKernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf, uint32_t * d_phi, uint128_t x, uint64_t y, uint16_t c)
 {
   uint64_t tidx = threadIdx.x + blockIdx.x * blockDim.x;
   uint64_t n = 2 * tidx + 1;

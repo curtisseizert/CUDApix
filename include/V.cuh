@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "cudapix.hpp"
 
 #pragma once
 

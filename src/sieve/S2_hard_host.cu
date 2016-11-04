@@ -24,7 +24,7 @@ S2hardHost::S2hardHost(uint64_t x, uint64_t y, uint16_t c)
   makeData(x, y, c);
   allocate();
 
-  gen::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[0]>>>(data->d_totals, h_cdata.elPerBlock);
+  global::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[0]>>>(data->d_totals, h_cdata.elPerBlock);
 
   zero();
 }
@@ -81,10 +81,10 @@ void S2hardHost::allocate()
 
 void S2hardHost::zero()
 {
-  gen::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[1]>>>(data->d_totalsNext, h_cdata.elPerBlock);
-  gen::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[2]>>>(data->d_sums, h_cdata.elPerBlock * h_cdata.blocks);
-  gen::zero<<<1 + h_cdata.blocks/512, 512, 0, stream[3]>>>(data->d_partialsums, h_cdata.blocks);
-  gen::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[4]>>>(data->d_num, h_cdata.elPerBlock * h_cdata.blocks);
+  global::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[1]>>>(data->d_totalsNext, h_cdata.elPerBlock);
+  global::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[2]>>>(data->d_sums, h_cdata.elPerBlock * h_cdata.blocks);
+  global::zero<<<1 + h_cdata.blocks/512, 512, 0, stream[3]>>>(data->d_partialsums, h_cdata.blocks);
+  global::zero<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[4]>>>(data->d_num, h_cdata.elPerBlock * h_cdata.blocks);
 }
 
 void S2hardHost::deallocate()

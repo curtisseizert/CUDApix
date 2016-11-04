@@ -8,7 +8,7 @@ UINT128_DIR = /home/curtis/CUDA-uint128
 NVCC = $(CUDA_DIR)/bin/nvcc
 CC = g++
 # Flags for the host compiler passed from nvcc
-CCFLAGS = -O2 -std=c++11
+CCFLAGS = -O2 -std=c++11 -g
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
@@ -30,7 +30,7 @@ _OBJS =\
  trivial.o\
  V.o\
  sieve/lpf_mu.o \
- S0.o \
+ ordinary.o \
  phi.o \
  S3.o \
  li.o \
@@ -40,7 +40,12 @@ _OBJS =\
  sieve/S2_hard_host.o \
  sieve/S2_hard_device.o \
  general/tools.o \
- general/device_functions.o
+ general/device_functions.o \
+ Gourdon/gourdonvariant.o \
+ Gourdon/sigma.o \
+ Gourdon/phi_0.o \
+ Gourdon/A.o \
+ Gourdon/B.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 
 PHI_SRC = src/utils/phi.cpp
@@ -77,4 +82,4 @@ ps: src/sieve/phisieve_device.cu
 	$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o src/sieve/phisieve_device.o $<
 
 clean:
-	rm -f obj/*.o obj/sieve/*.o obj/general/*.o cstest phi pix testu128 u128 lib/*.a
+	rm -f obj/*.o obj/sieve/*.o obj/general/*.o obj/Gourdon/*.o phi pix testu128 u128 lib/*.a

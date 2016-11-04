@@ -13,7 +13,7 @@ V_a = x^(1/4) < p
 #include <thrust/execution_policy.h>
 #include <cinttypes>
 
-#include "P2.cuh"
+#include "cudapix.hpp"
 #include "V.cuh"
 #include "CUDASieve/cudasieve.hpp"
 

@@ -11,9 +11,10 @@
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
 
-#include "P2.cuh"
+#include "cudapix.hpp"
 #include "trivial.cuh"
 #include "CUDASieve/cudasieve.hpp"
+#include "general/device_functions.cuh"
 #include "uint128_t.cuh"
 
 const uint16_t threadsPerBlock = 256;
@@ -60,13 +61,6 @@ __global__ void x_over_psquared(uint64_t * p, uint64_t x, size_t len)
 }
 */
 
-__global__ void x_minus_array(uint64_t * a, uint64_t x, size_t len)
-{
-  uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
-
-  if(tidx < len) a[tidx] = x - a[tidx];
-}
-
 uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbrt(x)) in a uint64_t
                                               // this imposes a limit of 2^96 for x
 {
@@ -79,13 +73,8 @@ uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbr
 
   std::cout << upper_bound << std::endl;
 
-  PrimeArray lo, hi;
-
-  lo.bottom = lower_bound;
-  lo.top = upper_bound;
-
-  hi.bottom = upper_bound;
-  hi.top = y;
+  PrimeArray lo(lower_bound, upper_bound);
+  PrimeArray hi(upper_bound, y);
 
   lo.d_primes = CudaSieve::getDevicePrimes(lo.bottom, lo.top, lo.len, 0);
   hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
@@ -94,8 +83,7 @@ uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbr
 
   thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes + hi.len, lo.d_primes, lo.d_primes + lo.len, lo.d_primes);
 
-  uint32_t blocks = 1 + lo.len/threadsPerBlock;
-  x_minus_array<<<blocks, threadsPerBlock>>>(lo.d_primes, (uint64_t) hi.len, lo.len);
+  x_minus_array(lo.d_primes, (uint64_t) hi.len, lo.len);
 
   uint128_t u = hi.len * (hi.len - 1)/2;
   u += thrust::reduce(thrust::device, lo.d_primes, lo.d_primes + lo.len);
@@ -106,15 +94,13 @@ uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbr
   return u;
 }
 
-void xOverPSquared(uint64_t * p, uint128_t x, size_t len)
+inline void xOverPSquared(uint64_t * p, uint128_t x, size_t len)
 {
-  g_xOverPSquared<<<len/threadsPerBlock + 1, threadsPerBlock>>>(p, x, len);
+  global::xOverPSquared<<<len/threadsPerBlock + 1, threadsPerBlock>>>(p, x, len);
 }
 
-
-__global__ void g_xOverPSquared(uint64_t * p, uint128_t x, size_t len)
+inline void x_minus_array(uint64_t * p, uint64_t x, size_t len)
 {
-  uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
-
-  if(tidx < len) p[tidx] = x / (p[tidx] * p[tidx]);
+  uint32_t blocks = 1 + len/threadsPerBlock;
+  global::x_minus_array<<<blocks, threadsPerBlock>>>(p, (uint64_t) x, len);
 }

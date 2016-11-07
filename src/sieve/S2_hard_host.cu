@@ -47,7 +47,7 @@ void S2hardHost::makeData(uint64_t x, uint64_t y, uint16_t c)
   h_cdata.mstart = 1;
   h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512u); // must be <= 1024
 
-  h_cdata.maxPrime = sqrt(h_cdata.z);
+  h_cdata.maxPrime = sqrt(sqrt(h_cdata.x));
   data->d_primeList = CudaSieve::getDevicePrimes32(0, h_cdata.maxPrime, h_cdata.primeListLength, 0);
   data->d_bitsieve = CudaSieve::genDeviceBitSieve(0, y, 0);
   h_cdata.elPerBlock = h_cdata.primeListLength - 2;

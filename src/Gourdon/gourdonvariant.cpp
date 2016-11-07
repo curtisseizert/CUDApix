@@ -39,9 +39,12 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
 
   std::cout << "starting a" << std::endl;
 
-  a = pi_gourdon->A();
+  a = pi_gourdon->A_large();
   std::cout << "A = " << a << "\n" << std::endl;
-  // 
+
+  // a = pi_gourdon->A();
+  // std::cout << "A = " << a << "\n" << std::endl;
+  //
   // a = pi_gourdon->checkA();
   // std::cout << "Checked A = " << a << "\n" << std::endl;
   //

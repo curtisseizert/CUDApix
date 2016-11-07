@@ -8,7 +8,7 @@ UINT128_DIR = /home/curtis/CUDA-uint128
 NVCC = $(CUDA_DIR)/bin/nvcc
 CC = g++
 # Flags for the host compiler passed from nvcc
-CCFLAGS = -O2 -std=c++11 -g
+CCFLAGS = -O0 -std=c++11 -g
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
@@ -40,7 +40,7 @@ _OBJS =\
  sieve/phisieve_host.o \
  sieve/S2_hard_host.o \
  sieve/S2_hard_device.o \
- general/tools.o \
+ general/leafcount.o \
  general/device_functions.o \
  Gourdon/gourdonvariant.o \
  Gourdon/sigma.o \

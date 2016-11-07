@@ -10,6 +10,10 @@ namespace global
   template<typename T, typename U>
   __global__ void set(T * array, U max, T set);
 
+// a[x] = x + b
+  template<typename T, typename U>
+  __global__ void setXPlusB(T * array, U max, T b);
+
   __global__ void multiply(uint32_t * a, int8_t * b, int32_t * c, uint32_t numElements);
   __global__ void xOverPY(uint64_t * p, uint128_t x, uint64_t y, size_t len);
   __global__ void xOverPY(uint64_t * p, uint64_t x, uint64_t y, size_t len);

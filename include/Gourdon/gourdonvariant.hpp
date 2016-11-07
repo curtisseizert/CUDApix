@@ -29,6 +29,7 @@ public:
   uint64_t pi();
 
   uint64_t A();
+  uint64_t A_large();
   uint64_t checkA();
 
   uint64_t B();

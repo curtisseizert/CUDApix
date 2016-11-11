@@ -32,7 +32,7 @@ uint64_t ordinary(uint64_t x, uint64_t y, uint16_t c)
 
   Phisieve * phi = new Phisieve(1000);
 
-  phi->firstSieve(c+1);
+  phi->firstSieve(c + 1);
 
   d_phi = phi->getCountDevice();
 
@@ -43,7 +43,6 @@ uint64_t ordinary(uint64_t x, uint64_t y, uint16_t c)
 
   cudaDeviceSynchronize();
   sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
-
 
   cudaFree(d_mu);
   cudaFree(d_quot);
@@ -58,7 +57,7 @@ uint128_t ordinary(uint128_t x, uint64_t y, uint16_t c)
 {
   c--;
   uint16_t threads = 256;
-  uint64_t sum = 0;
+  uint128_t sum = 0;
   int64_t * d_quot = NULL;
   int8_t * d_mu;
   uint32_t arraySize = 1+ y/2;
@@ -69,7 +68,7 @@ uint128_t ordinary(uint128_t x, uint64_t y, uint16_t c)
 
   Phisieve * phi = new Phisieve(1000);
 
-  phi->firstSieve(c+1);
+  phi->firstSieve(c + 1);
 
   d_phi = phi->getCountDevice();
 
@@ -80,7 +79,6 @@ uint128_t ordinary(uint128_t x, uint64_t y, uint16_t c)
 
   cudaDeviceSynchronize();
   sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
-
 
   cudaFree(d_mu);
   cudaFree(d_quot);

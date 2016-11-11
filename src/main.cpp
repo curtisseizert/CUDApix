@@ -5,10 +5,11 @@
 #include <uint128_t.cuh>
 #include <string>
 #include <CUDASieve/cudasieve.hpp>
+#include <cuda_profiler_api.h>
 
+#include "ordinary.cuh"
 #include "general/leafcount.hpp"
 #include "general/tools.hpp"
-#include "sieve/S2_hard_host.cuh"
 #include "Gourdon/gourdonvariant.hpp"
 #include "P2.cuh"
 #include "pitable.cuh"
@@ -67,27 +68,15 @@ int main(int argc, char ** argv)
     std::cout << "z = " << x/y << std::endl;
     std::cout << "c = " << c << std::endl;
 
-    // s3 = S2hardHost::S2hard(x, y, c);
+    uint64_t p0 = ordinary(x, y, c);
+    std::cout << p0 << std::endl;
+
+    // pi = GourdonVariant64::piGourdon(x, y, c);
+    // std::cout << "pi = " << pi << std::endl;
     //
-    // std::cout << (int64_t)s3 << std::endl;
-    //
+    // countEasyGourdon(x);
 
-    pi = GourdonVariant64::piGourdon(x, y, c);
-
-    std::cout << "pi = " << pi << std::endl;
-
-    countEasyGourdon(x);
-
-    // PiTable pi_table(x, sqrt(x));
-    //
-    // while(pi_table.get_base() > pi_table.get_bottom()){
-    //   pi_table.getNextDown();
-    //   std::cout << pi_table.get_base() << " " << pi_table.get_range() << " " << pi_table.get_pi_base() << std::endl;
-    // }
-    //
-    // std::cout << "\t" << pi_table.get_range();
-
-
+    cudaDeviceReset();
     return 0;
 }
 

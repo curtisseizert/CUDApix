@@ -15,18 +15,6 @@ template __global__ void global::zero<int64_t, uint32_t>(int64_t *, uint32_t);
 template __global__ void global::zero<uint64_t, uint32_t>(uint64_t *, uint32_t);
 template __global__ void global::zero<uint64_t, uint64_t>(uint64_t *, uint64_t);
 
-template<typename T, typename U>
-__global__ void global::set(T * array, U max, T set)
-{
-  U tidx = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if(tidx< max) array[tidx] = set;
-}
-
-template __global__ void global::set<int32_t, uint32_t>(int32_t *, uint32_t, int32_t);
-template __global__ void global::set<uint32_t, uint64_t>(uint32_t *, uint64_t, uint32_t);
-template __global__ void global::set<int64_t, uint32_t>(int64_t *, uint32_t, int64_t);
-
 __global__ void global::multiply(uint32_t * a, int8_t * b, int32_t * c, uint32_t numElements)
 {
   uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;

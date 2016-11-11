@@ -34,7 +34,7 @@ PiTable::PiTable(uint64_t base, uint64_t bottom, uint64_t range)
 {
   this->bottom = bottom;
   this->base = base;
-  if(range == 0) this->range = getMaxRange();
+  if(range == 0) this->range = std::min(getMaxRange(), base - bottom);
   else           this->range = range;
 
   allocate();
@@ -207,7 +207,7 @@ void transposePrimes(uint64_t * d_primes, uint32_t * d_pitable, uint64_t bottom,
     }
 
     while(lo < hi){
-      d_pitable[lo] = tidx + 1 + pi_base;
+      d_pitable[lo] = tidx + 1;
       lo++;
     }
   }

@@ -48,10 +48,6 @@ public:
   uint64_t getNextBaseDown(){return std::max((int64_t)bottom, (int64_t)(base - range));}
   uint32_t * getCurrent();
 
-
-
-
-
 };
 
 #endif

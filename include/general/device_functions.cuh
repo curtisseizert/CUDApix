@@ -2,13 +2,21 @@
 #include <cuda.h>
 #include <uint128_t.cuh>
 
+#ifndef _DEVICE_FUNCTIONS_CUDAPIX
+#define _DEVICE_FUNCTIONS_CUDAPIX
+
 namespace global
 {
   template<typename T, typename U>
   __global__ void zero(T * array, U max);
 
   template<typename T, typename U>
-  __global__ void set(T * array, U max, T set);
+  __global__ void set(T * array, U max, T set)
+  {
+    U tidx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if(tidx< max) array[tidx] = set;
+  }
 
 // a[x] = x + b
   template<typename T, typename U>
@@ -24,3 +32,5 @@ namespace global
   __global__ void x_minus_array(uint64_t * a, uint64_t x, size_t len);
   __global__ void divXbyY(uint128_t x, uint64_t * y, size_t len);
 }
+
+#endif

@@ -45,7 +45,8 @@ _OBJS =\
  Gourdon/gourdonvariant.o \
  Gourdon/sigma.o \
  Gourdon/phi_0.o \
- Gourdon/A.o \
+ Gourdon/A1.o \
+ Gourdon/A2.o \
  Gourdon/B.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 

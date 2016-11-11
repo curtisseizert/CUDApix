@@ -23,8 +23,8 @@ void mRange::update(uint32_t p, const nRange & n)
 __device__
 void mRange::update_hi(uint32_t p, const nRange & n)
 {
-  // uint64_t ub = min(cdata.x / (p * p * p), cdata.z/p);
-  uint64_t ub = min(cdata.y, cdata.z/p);
+  uint64_t ub = min(cdata.x / (p * p * p), cdata.z/p);
+  // uint64_t ub = min(cdata.y, cdata.z/p);
 
   lo = cdata.x / (n.hi * p);
   lo = lo <= p ? p + 2 : lo;
@@ -323,7 +323,7 @@ __global__ void S2glob::S2ctl(S2data_64 * data)
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
-    if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
+    // if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
     if(p > __float2uint_rd(sqrtf(cdata.y))) goto Sparse;
 
     S2dev::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);

@@ -8,32 +8,18 @@
 
 #include "cudapix.hpp"
 #include "general/device_functions.cuh"
-#include "Gourdon/gourdonvariant.hpp"
+#include "Deleglise-Rivat/deleglise-rivat.hpp"
 
 const uint16_t threadsPerBlock = 256;
 
-int64_t GourdonVariant64::sigma()
-{
-  return sigma0() + sigma1() + sigma2() + sigma3() + sigma4() + sigma5() + sigma6();
-}
-
-int64_t GourdonVariant64::sigma0()
-{
-  int64_t s0 = pi_y  - 1;
-  s0 += (pi_sqrtx * (pi_sqrtx - 1)) / 2;
-  s0 -= pi_y * (pi_y - 1) / 2;
-
-  return s0;
-}
-
-int64_t GourdonVariant64::sigma1()
+int64_t deleglise_rivat64::sigma1()
 {
   int64_t s1 = (pi_y - pi_sqrtx) * (pi_y - pi_sqrtx - 1) / 2;
 
   return s1;
 }
 
-int64_t GourdonVariant64::sigma2()
+int64_t deleglise_rivat64::sigma2()
 {
   int64_t s2 = pi_cbrtx - pi_sqrtz;
   s2 -= pi_sqrtz * (pi_sqrtz - 3) / 2;
@@ -43,7 +29,7 @@ int64_t GourdonVariant64::sigma2()
   return s2;
 }
 
-int64_t GourdonVariant64::sigma3()
+int64_t deleglise_rivat64::sigma3()
 {
   int64_t s3 = pi_cbrtx;
   s3 *= (s3 - 1) * (2 * s3 - 1) / 6;
@@ -54,7 +40,7 @@ int64_t GourdonVariant64::sigma3()
   return s3;
 }
 
-int64_t GourdonVariant64::sigma4()
+int64_t deleglise_rivat64::sigma4()
 {
   int64_t s4 = 0;
   PrimeArray p(qrtx, sqrtz);
@@ -73,7 +59,7 @@ int64_t GourdonVariant64::sigma4()
   return s4;
 }
 
-int64_t GourdonVariant64::sigma5()
+int64_t deleglise_rivat64::sigma5()
 {
   int64_t s5 = 0;
   PrimeArray p(sqrtz, cbrtx);
@@ -92,7 +78,7 @@ int64_t GourdonVariant64::sigma5()
   return s5;
 }
 
-int64_t GourdonVariant64::sigma6()
+int64_t deleglise_rivat64::sigma6()
 {
   int64_t s6 = 0;
   PrimeArray p(qrtx, cbrtx);

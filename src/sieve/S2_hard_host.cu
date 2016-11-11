@@ -40,6 +40,7 @@ void S2hardHost::makeData(uint64_t x, uint64_t y, uint16_t c)
   cudaDeviceSynchronize();
   h_cdata.x = x;
   h_cdata.y = y;
+  h_cdata.sqrty = sqrt(y);
   h_cdata.z = x/y;
   h_cdata.c = c;
   h_cdata.sieveWords = sieveWords_;
@@ -47,7 +48,7 @@ void S2hardHost::makeData(uint64_t x, uint64_t y, uint16_t c)
   h_cdata.mstart = 1;
   h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512u); // must be <= 1024
 
-  h_cdata.maxPrime = sqrt(h_cdata.z);
+  h_cdata.maxPrime = sqrt(sqrt(x));
   data->d_primeList = CudaSieve::getDevicePrimes32(0, h_cdata.maxPrime, h_cdata.primeListLength, 0);
   data->d_bitsieve = CudaSieve::genDeviceBitSieve(0, y, 0);
   h_cdata.elPerBlock = h_cdata.primeListLength - 2;
@@ -119,11 +120,11 @@ int64_t S2hardHost::launchIter()
 
   S2glob::addArrays<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[1]>>>(data->d_totals, data->d_totalsNext, h_cdata.blocks);
 
-  // dispDevicePartialSums(data->d_num, (h_cdata.blocks * h_cdata.elPerBlock), h_cdata.blocks);
+  dispDevicePartialSums(data->d_num, (h_cdata.blocks * h_cdata.elPerBlock), h_cdata.blocks);
   // dispDevicePartialSums(data->d_sums, h_cdata.blocks*h_cdata.elPerBlock, h_cdata.blocks);
 
   s2_hard = thrust::reduce(thrust::device, data->d_partialsums, data->d_partialsums + h_cdata.blocks);
-  // std::cout << s2_hard << std::endl;
+  std::cout << s2_hard << std::endl;
 
   s2_hard += thrust::reduce(thrust::device, data->d_sums, data->d_sums + (h_cdata.blocks * h_cdata.elPerBlock));
   cudaDeviceSynchronize();

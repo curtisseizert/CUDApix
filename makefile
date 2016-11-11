@@ -47,8 +47,15 @@ _OBJS =\
  Gourdon/phi_0.o \
  Gourdon/A1.o \
  Gourdon/A2.o \
- Gourdon/B.o
+ Gourdon/B.o \
+ Deleglise-Rivat/deleglise-rivat.o \
+ Deleglise-Rivat/S2.o \
+ Deleglise-Rivat/sigma.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
+DIRS = obj/Deleglise-Rivat \
+ obj/general \
+ obj/Gourdon \
+ obj/sieve
 
 PHI_SRC = src/utils/phi.cpp
 
@@ -75,6 +82,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(PHI): $(PHI_SRC) $(CS_LIB)
 	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -L $(CUDASIEVE_DIR) $(CC_LIBS) -l$(LIBNAME) $< -o $@
 	@echo "     CUDA     " $@
+
+dirs:
+	@mkdir obj
+	@mkdir $(DIRS)
 
 # test function
 testu128: src/test128.cu

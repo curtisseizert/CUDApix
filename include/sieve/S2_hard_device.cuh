@@ -5,7 +5,7 @@
 #define _S2_HARD_DEVICE
 
 struct c_data64{
-  uint64_t bstart, mstart, x, y, z;
+  uint64_t bstart, mstart, x, sqrty, y, z;
   uint32_t blocks, elPerBlock, maxPrime;
   size_t primeListLength;
   uint16_t c, sieveWords;

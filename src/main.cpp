@@ -7,6 +7,7 @@
 #include <CUDASieve/cudasieve.hpp>
 #include <cuda_profiler_api.h>
 
+#include "trivial.cuh"
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 #include "general/leafcount.hpp"
 #include "general/tools.hpp"
@@ -73,8 +74,9 @@ int main(int argc, char ** argv)
 
     pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
     std::cout << "pi = " << pi << std::endl;
-    //
-    // countEasyGourdon(x);
+
+    pi = GourdonVariant64::piGourdon(x, y, c);
+    std::cout << "pi = " << pi << std::endl;
 
     cudaDeviceReset();
     return 0;

@@ -38,25 +38,35 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
 
   uint64_t a, b, s, w, p0;
 
-  std::cout << "starting a" << std::endl;
+  // std::cout << "starting a" << std::endl;
+  // //
+  // // a = pi_gourdon->A_large();
+  // // std::cout << "A = " << a << "\n" << std::endl;
   //
-  // a = pi_gourdon->A_large();
-  // std::cout << "A = " << a << "\n" << std::endl;
-
-  a = pi_gourdon->A();
-  std::cout << "Checked A = " << a << "\n" << std::endl;
+  // a = pi_gourdon->A();
+  // std::cout << "Checked A = " << a << "\n" << std::endl;
 
   b = pi_gourdon->B();
-  std::cout << "B = " << b << "\n" << std::endl;
 
-  w = S2hardHost::S2hard(x, y, c);
-  std::cout << "Omega = " << w << "\n" << std::endl;
+  b -= pi_gourdon->sigma0();
+  b += pi_gourdon->pi_y -1;
 
-  s = pi_gourdon->sigma();
-  std::cout << "Sigma = " << s << "\n" << std::endl;
+  std::cout << "P2 = " << b << std::endl;
 
-  p0 = pi_gourdon->phi_0();
-  std::cout << "phi_0 = " << p0 << "\n" << std::endl;
+  a = pi_gourdon->sigma1();// - pi_gourdon->sigma5();
+  //a += pi_gourdon->pi_y * (pi_gourdon->pi_cbrtx - pi_gourdon->pi_sqrtz);
+
+  std::cout << "Trivial = " << a << std::endl;
+
+  //
+  // w = S2hardHost::S2hard(x, y, c);
+  // std::cout << "Omega = " << w << "\n" << std::endl;
+  //
+  // s = pi_gourdon->sigma();
+  // std::cout << "Sigma = " << s << "\n" << std::endl;
+  //
+  // p0 = pi_gourdon->phi_0();
+  // std::cout << "phi_0 = " << p0 << "\n" << std::endl;
   //
 
   return a - b + p0 + w + s;

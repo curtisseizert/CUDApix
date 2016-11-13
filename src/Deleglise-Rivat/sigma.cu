@@ -1,3 +1,12 @@
+//
+//  sigma.cu
+//
+//  These sigma values _roughly_ correspond to those used by Gourdon, but have
+//  been adapted so that the sum can be partitioned in a similar manner to that
+//  found in Kim Walisch's primecount.
+//
+//
+
 #include <stdint.h>
 #include <CUDASieve/cudasieve.hpp>
 #include <uint128_t.cuh>
@@ -10,26 +19,25 @@
 #include "general/device_functions.cuh"
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 
-const uint16_t threadsPerBlock = 256;
+uint16_t threadsPerBlock = 256;
 
-int64_t deleglise_rivat64::sigma1()
+int64_t deleglise_rivat64::sigma1() const
 {
   int64_t s1 = (pi_y - pi_sqrtx) * (pi_y - pi_sqrtx - 1) / 2;
 
   return s1;
 }
 
-int64_t deleglise_rivat64::sigma2()
+int64_t deleglise_rivat64::sigma2() const
 {
-  int64_t s2 = pi_cbrtx - pi_sqrtz;
+  int64_t s2 = pi_qrtx * (pi_qrtx - 3) / 2;
   s2 -= pi_sqrtz * (pi_sqrtz - 3) / 2;
-  s2 += pi_qrtx * (pi_qrtx - 3) / 2;
   s2 *= pi_y;
 
   return s2;
 }
 
-int64_t deleglise_rivat64::sigma3()
+int64_t deleglise_rivat64::sigma3() const
 {
   int64_t s3 = pi_cbrtx;
   s3 *= (s3 - 1) * (2 * s3 - 1) / 6;
@@ -40,7 +48,7 @@ int64_t deleglise_rivat64::sigma3()
   return s3;
 }
 
-int64_t deleglise_rivat64::sigma4()
+int64_t deleglise_rivat64::sigma4() const
 {
   int64_t s4 = 0;
   PrimeArray p(qrtx, sqrtz);
@@ -56,10 +64,12 @@ int64_t deleglise_rivat64::sigma4()
 
   s4 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
 
+  s4 *= pi_y;
+
   return s4;
 }
 
-int64_t deleglise_rivat64::sigma5()
+int64_t deleglise_rivat64::sigma5() const
 {
   int64_t s5 = 0;
   PrimeArray p(sqrtz, cbrtx);
@@ -78,7 +88,7 @@ int64_t deleglise_rivat64::sigma5()
   return s5;
 }
 
-int64_t deleglise_rivat64::sigma6()
+int64_t deleglise_rivat64::sigma6() const
 {
   int64_t s6 = 0;
   PrimeArray p(qrtx, cbrtx);

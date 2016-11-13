@@ -63,8 +63,10 @@ uint64_t deleglise_rivat64::S2()
 
   cudaFree(d_sums);
   cudaFree(pq.d_primes);
+
+  sum += sigma2() + sigma3() + sigma4() + (2 * sigma5()) + sigma6();
   cudaDeviceReset();
-  return sum + sigma2() + sigma3() + sigma4() + sigma5() + sigma6();
+  return sum;
 }
 
 __global__

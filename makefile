@@ -50,6 +50,7 @@ _OBJS =\
  Gourdon/B.o \
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/S2.o \
+ Deleglise-Rivat/S3.o \
  Deleglise-Rivat/sigma.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 DIRS = obj/Deleglise-Rivat \

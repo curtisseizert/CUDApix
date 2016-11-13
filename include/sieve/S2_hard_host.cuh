@@ -11,8 +11,11 @@ private:
   c_data64 h_cdata;
   uint16_t numStreams_ = 5, sieveWords_ = 3072;
   cudaStream_t stream[5];
+  uint64_t maxPrime_;
 
 public:
+
+  S2hardHost(uint64_t x, uint64_t y, uint16_t c, uint64_t maxPrime);
   S2hardHost(uint64_t x, uint64_t y, uint16_t c);
   ~S2hardHost();
 
@@ -29,6 +32,8 @@ public:
 
 
   static uint64_t S2hard(uint64_t x, uint64_t y, uint16_t c);
+  static uint64_t S2hard(uint64_t x, uint64_t y, uint16_t c, uint64_t maxPrime);
+
 
 };
 

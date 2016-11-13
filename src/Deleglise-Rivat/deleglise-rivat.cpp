@@ -5,6 +5,7 @@
 
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 #include "P2.cuh"
+#include "trivial.cuh"
 #include "ordinary.cuh"
 
 deleglise_rivat64::deleglise_rivat64(uint64_t x, uint64_t y, uint16_t c)
@@ -36,7 +37,12 @@ void deleglise_rivat64::calculatePiValues()
 
 uint64_t deleglise_rivat64::S1()
 {
-  return (uint64_t)sigma1();
+  return (uint64_t)this->sigma1();
+}
+
+uint64_t deleglise_rivat64::S0()
+{
+  return Ordinary(x, y, c);
 }
 
 uint64_t deleglise_rivat64::pi_deleglise_rivat(uint64_t x, uint64_t y, uint16_t c)
@@ -44,20 +50,29 @@ uint64_t deleglise_rivat64::pi_deleglise_rivat(uint64_t x, uint64_t y, uint16_t 
   deleglise_rivat64 pi_dr(x, y, c);
 
   uint64_t pi_y = pi_dr.pi_y;
-  uint64_t p2, s0, s1, s2;//, s3;
+  uint64_t p2, ordinary, trivial, easy, hard;
 
   p2 = P2(x, y);
 
-  s0 = ordinary(x, y, c);
+  ordinary = pi_dr.S0();
 
-  s1 = pi_dr.S1();
+  trivial = S2_trivial(x, y);
 
-  s2 = pi_dr.S2();
+  std::cout << pi_dr.S1() << std::endl;
 
+  easy = pi_dr.S2();
 
+  hard = pi_dr.S3();
 
+  std::cout << "pi(x) = phi(x, a) - 1 + a - P2(x, a), where a = pi(y)" << std::endl;
+  std::cout << "P2\t\t:\t" << p2 << std::endl;
+  std::cout << "Ordinary Leaves\t:\t" << ordinary << std::endl;
+  std::cout << "Trivial Leaves \t:\t" << trivial << std::endl;
+  std::cout << "Easy Leaves    \t:\t" << easy << std::endl;
+  std::cout << "Hard Leaves\t:\t" << hard << std::endl;
+  std::cout << std::endl;
 
-  uint64_t pi = s0 + s1 + s2 + pi_y - 1;
+  uint64_t pi = ordinary + trivial + easy + hard + pi_y - 1 - p2;
 
   return pi;
 }

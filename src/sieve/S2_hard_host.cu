@@ -21,6 +21,18 @@ const uint16_t h_threadsPerBlock = 256;
 
 S2hardHost::S2hardHost(uint64_t x, uint64_t y, uint16_t c)
 {
+  maxPrime_ = sqrt(x/y);
+  makeData(x, y, c);
+  allocate();
+
+  global::zero<<<1 + h_cdata.elPerBlock/512, 512, 0, stream[0]>>>(data->d_totals, h_cdata.elPerBlock);
+
+  zero();
+}
+
+S2hardHost::S2hardHost(uint64_t x, uint64_t y, uint16_t c, uint64_t maxPrime)
+{
+  maxPrime_ = maxPrime;
   makeData(x, y, c);
   allocate();
 
@@ -48,7 +60,7 @@ void S2hardHost::makeData(uint64_t x, uint64_t y, uint16_t c)
   h_cdata.mstart = 1;
   h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512u); // must be <= 1024
 
-  h_cdata.maxPrime = sqrt(sqrt(x));
+  h_cdata.maxPrime = maxPrime_;
   data->d_primeList = CudaSieve::getDevicePrimes32(0, h_cdata.maxPrime, h_cdata.primeListLength, 0);
   data->d_bitsieve = CudaSieve::genDeviceBitSieve(0, y, 0);
   h_cdata.elPerBlock = h_cdata.primeListLength - 2;
@@ -120,11 +132,11 @@ int64_t S2hardHost::launchIter()
 
   S2glob::addArrays<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[1]>>>(data->d_totals, data->d_totalsNext, h_cdata.blocks);
 
-  dispDevicePartialSums(data->d_num, (h_cdata.blocks * h_cdata.elPerBlock), h_cdata.blocks);
+  // dispDevicePartialSums(data->d_num, (h_cdata.blocks * h_cdata.elPerBlock), h_cdata.blocks);
   // dispDevicePartialSums(data->d_sums, h_cdata.blocks*h_cdata.elPerBlock, h_cdata.blocks);
 
   s2_hard = thrust::reduce(thrust::device, data->d_partialsums, data->d_partialsums + h_cdata.blocks);
-  std::cout << s2_hard << std::endl;
+  // std::cout << s2_hard << std::endl;
 
   s2_hard += thrust::reduce(thrust::device, data->d_sums, data->d_sums + (h_cdata.blocks * h_cdata.elPerBlock));
   cudaDeviceSynchronize();
@@ -141,6 +153,27 @@ uint64_t S2hardHost::S2hard(uint64_t x, uint64_t y, uint16_t c)
   uint64_t sum = 0;
 
   S2hardHost * s2h = new S2hardHost(x, y, c);
+  KernelTime timer;
+  timer.start();
+
+  sum += s2h->launchIter();
+
+  s2h->setupNextIter();
+
+  while(s2h->h_cdata.bstart < s2h->h_cdata.z){
+    sum += s2h->launchIter();
+    s2h->setupNextIter();
+  }
+  timer.stop();
+  timer.displayTime();
+  return sum;
+}
+
+uint64_t S2hardHost::S2hard(uint64_t x, uint64_t y, uint16_t c, uint64_t maxPrime)
+{
+  uint64_t sum = 0;
+
+  S2hardHost * s2h = new S2hardHost(x, y, c, maxPrime);
   KernelTime timer;
   timer.start();
 

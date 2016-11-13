@@ -5,5 +5,5 @@
 
 uint64_t GourdonVariant64::phi_0()
 {
-  return ordinary(x, y, c);
+  return Ordinary(x, y, c);
 }

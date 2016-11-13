@@ -70,6 +70,8 @@ int64_t GourdonVariant64::sigma4()
 
   s4 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
 
+  s4 *= pi_y;
+
   return s4;
 }
 

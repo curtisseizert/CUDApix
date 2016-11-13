@@ -19,8 +19,16 @@
 
 const uint16_t threadsPerBlock = 256;
 
-/*
-uint64_t S1_trivial(uint64_t x, uint64_t y)
+
+__global__ void x_over_psquared(uint64_t * p, uint64_t x, size_t len)
+{
+  uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
+
+  if(tidx < len) p[tidx] = x / (p[tidx] * p[tidx]);
+}
+
+
+uint64_t S2_trivial(uint64_t x, uint64_t y)
 {
   uint64_t lower_bound = std::sqrt(x/y);
   uint64_t upper_bound = std::cbrt(x);
@@ -42,7 +50,7 @@ uint64_t S1_trivial(uint64_t x, uint64_t y)
 
   thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes + hi.len, lo.d_primes, lo.d_primes + lo.len, lo.d_primes);
 
-  x_minus_array<<<blocks, threadsPerBlock>>>(lo.d_primes, (uint64_t) hi.len, lo.len);
+  x_minus_array(lo.d_primes, (uint64_t) hi.len, lo.len);
 
   uint64_t u = thrust::reduce(thrust::device, lo.d_primes, lo.d_primes + lo.len);
   u += hi.len*(hi.len - 1)/2;
@@ -53,15 +61,7 @@ uint64_t S1_trivial(uint64_t x, uint64_t y)
   return u;
 }
 
-__global__ void x_over_psquared(uint64_t * p, uint64_t x, size_t len)
-{
-  uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
-
-  if(tidx < len) p[tidx] = x / (p[tidx] * p[tidx]);
-}
-*/
-
-uint128_t S1_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbrt(x)) in a uint64_t
+uint128_t S2_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbrt(x)) in a uint64_t
                                               // this imposes a limit of 2^96 for x
 {
   uint64_t lower_bound = uint128_t::sqrt(x/y);

@@ -17,7 +17,7 @@ __constant__ uint16_t d_small[8] = {2, 3, 5, 7, 11, 13, 17, 19};
 __constant__ uint32_t d_wheel[8] = {2, 6, 30, 210, 2310, 30030, 510510, 9699690};
 __constant__ uint32_t d_totient[8] = {1, 2, 8, 48, 480, 5760, 92160, 1658880};
 
-uint64_t ordinary(uint64_t x, uint64_t y, uint16_t c)
+uint64_t Ordinary(uint64_t x, uint64_t y, uint16_t c)
 {
   c--;
   uint16_t threads = 256;
@@ -53,7 +53,7 @@ uint64_t ordinary(uint64_t x, uint64_t y, uint16_t c)
   return sum;
 }
 
-uint128_t ordinary(uint128_t x, uint64_t y, uint16_t c)
+uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
 {
   c--;
   uint16_t threads = 256;

@@ -29,10 +29,10 @@
 
 uint64_t GourdonVariant64::A()
 {
-  // sum(x^1/numQ / numThreads < p <= x^1/3, sum(p < q <= sqrt(x/p), chi(x/(p*q)) * pi(x/(p * q))))
+  // sum(x^1/4 < p <= x^1/3, sum(p < q <= sqrt(x/p), chi(x/(p*q)) * pi(x/(p * q))))
   // where chi(n) = 1 if n >= y and 2 if n < y
 
-  uint64_t sum = 0, pSoFar = 0, blocks = 0;
+  uint64_t sum = 0, blocks = 0;
   PrimeArray pq(qrtx, sqrt(x / qrtx));
 
   uint64_t num_p = pi_cbrtx - pi_qrtx;
@@ -52,7 +52,7 @@ uint64_t GourdonVariant64::A()
   uint32_t * d_pitable = pi_table->getCurrent();
 
   blocks = 1 + ((pq.len)/threadsPerBlock);
-  A_lo_p_reg<<<blocks, threadsPerBlock>>>(x, pq.d_primes + pSoFar, d_sums, y, num_p, pq.len, d_pitable);
+  A_lo_p_reg<<<blocks, threadsPerBlock>>>(x, pq.d_primes, d_sums, y, num_p, pq.len, d_pitable);
   cudaDeviceSynchronize();
 
   sum = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);

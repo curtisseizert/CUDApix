@@ -8,17 +8,17 @@ UINT128_DIR = /home/curtis/CUDA-uint128
 NVCC = $(CUDA_DIR)/bin/nvcc
 CC = g++
 # Flags for the host compiler passed from nvcc
-CCFLAGS = -O0 -std=c++11 -g
+CCFLAGS = -O0 -std=c++11 -g -fopenmp
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
-NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo
+NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo -Xcompiler -fopenmp
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills -g -lineinfo
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR) -I ./
 LIBNAME = cudasieve
 CC_LIBS = -lm -lstdc++
-NVCC_LIBS = -lcudart $(CC_LIBS) -l$(LIBNAME)
+NVCC_LIBS = -lcudart -lm -lstdc++ -l$(LIBNAME)
 
 CLI_SRC_DIR = src
 SRC_DIR = src
@@ -47,6 +47,7 @@ _OBJS =\
  Gourdon/phi_0.o \
  Gourdon/A1.o \
  Gourdon/A2.o \
+ Gourdon/A_cpu.o \
  Gourdon/B.o \
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/S2.o \

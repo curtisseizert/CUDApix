@@ -31,6 +31,7 @@ public:
   uint64_t A();
   uint64_t A_large();
   uint64_t checkA();
+  uint64_t A_cpu();
 
   uint64_t B();
 
@@ -45,3 +46,4 @@ inline void xOverPSquared(uint64_t * p, uint128_t x, size_t len);
 inline void xOverPSquared(uint64_t * p, uint64_t x, size_t len);
 inline void sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len);
 inline void squareEach(uint64_t * pi, size_t len);
+inline void addToArray(uint64_t * pi, size_t len, uint64_t k);

@@ -24,7 +24,7 @@ __device__
 void mRange::update_hi(uint32_t p, const nRange & n)
 {
   // uint64_t ub = min(cdata.x / (p * p * p), cdata.z/p);
-  uint64_t ub = min(cdata.y, cdata.z/p);
+  uint64_t ub = cdata.y;//min(cdata.y, cdata.z/p);
 
   lo = cdata.x / (n.hi * p);
   lo = lo <= p ? p + 2 : lo;

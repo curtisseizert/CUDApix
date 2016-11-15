@@ -14,7 +14,22 @@ const uint16_t threadsPerBlock = 256;
 
 int64_t GourdonVariant64::sigma()
 {
-  return sigma0() + sigma1() + sigma2() + sigma3() + sigma4() + sigma5() + sigma6();
+  int64_t s[7];
+  int64_t s_tot = 0;
+  s[0] = sigma0();
+  s[1] = sigma1();
+  s[2] = sigma2();
+  s[3] = sigma3();
+  s[4] = sigma4();
+  s[5] = sigma5();
+  s[6] = sigma6();
+
+  for(uint16_t i = 0; i < 7; i++){
+    // std::cout << "Sigma " << i << " = " << s[i] << std::endl;
+    s_tot += s[i];
+  }
+
+  return s_tot;
 }
 
 int64_t GourdonVariant64::sigma0()
@@ -28,7 +43,7 @@ int64_t GourdonVariant64::sigma0()
 
 int64_t GourdonVariant64::sigma1()
 {
-  int64_t s1 = (pi_y - pi_sqrtx) * (pi_y - pi_sqrtx - 1) / 2;
+  int64_t s1 = (pi_y - pi_cbrtx) * (pi_y - pi_cbrtx - 1) / 2;
 
   return s1;
 }
@@ -46,7 +61,7 @@ int64_t GourdonVariant64::sigma2()
 int64_t GourdonVariant64::sigma3()
 {
   int64_t s3 = pi_cbrtx;
-  s3 *= (s3 - 1) * (2 * s3 - 1) / 6;
+  s3 *= (pi_cbrtx - 1) * (2 * pi_cbrtx - 1) / 6;
   s3 -= pi_cbrtx;
   s3 -= pi_qrtx * (pi_qrtx - 1) * (2 * pi_qrtx - 1) / 6;
   s3 += pi_qrtx;
@@ -57,7 +72,7 @@ int64_t GourdonVariant64::sigma3()
 int64_t GourdonVariant64::sigma4()
 {
   int64_t s4 = 0;
-  PrimeArray p(qrtx, sqrtz);
+  PrimeArray p(qrtx + 1, sqrtz);
   PrimeArray pi(sqrtz, x / (y * qrtx));
 
   p.d_primes = CudaSieve::getDevicePrimes(p.bottom, p.top, p.len, 0);
@@ -70,6 +85,8 @@ int64_t GourdonVariant64::sigma4()
 
   s4 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
 
+  s4 += pi_sqrtz * p.len;
+
   s4 *= pi_y;
 
   return s4;
@@ -78,7 +95,7 @@ int64_t GourdonVariant64::sigma4()
 int64_t GourdonVariant64::sigma5()
 {
   int64_t s5 = 0;
-  PrimeArray p(sqrtz, cbrtx);
+  PrimeArray p(sqrtz + 1, cbrtx);
   PrimeArray pi(cbrtx, y);
 
   p.d_primes = CudaSieve::getDevicePrimes(p.bottom, p.top, p.len, 0);
@@ -90,6 +107,7 @@ int64_t GourdonVariant64::sigma5()
   thrust::upper_bound(thrust::device, pi.d_primes, pi.d_primes + pi.len, p.d_primes, p.d_primes + p.len, p.d_primes);
 
   s5 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
+  s5 += p.len * pi_cbrtx;
 
   return s5;
 }
@@ -97,7 +115,7 @@ int64_t GourdonVariant64::sigma5()
 int64_t GourdonVariant64::sigma6()
 {
   int64_t s6 = 0;
-  PrimeArray p(qrtx, cbrtx);
+  PrimeArray p(qrtx + 1, cbrtx);
   PrimeArray pi(cbrtx, qrtx * sqrt(qrtx));
 
   p.d_primes = CudaSieve::getDevicePrimes(p.bottom, p.top, p.len, 0);
@@ -107,6 +125,8 @@ int64_t GourdonVariant64::sigma6()
   cudaDeviceSynchronize();
 
   thrust::upper_bound(thrust::device, pi.d_primes, pi.d_primes + pi.len, p.d_primes, p.d_primes + p.len, p.d_primes);
+
+  addToArray(p.d_primes, p.len, pi_cbrtx);
 
   squareEach(p.d_primes, p.len);
   cudaDeviceSynchronize();
@@ -167,6 +187,12 @@ inline void sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len)
 ///  For sigma6:
 ///  array[i] = array[i]^2;
 ///  which represents the expression pi(n)^2
+///
+
+inline void addToArray(uint64_t * pi, size_t len, uint64_t k)
+{
+  global::addToArray<<<len/threadsPerBlock + 1, threadsPerBlock>>>(pi, len, k);
+}
 
 inline void squareEach(uint64_t * pi, size_t len)
 {

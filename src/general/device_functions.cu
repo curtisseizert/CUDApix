@@ -79,6 +79,13 @@ __global__ void global::xOverPSquared(uint64_t * p, uint64_t x, size_t len)
 ///  which represents the equation n = x^(1/2) / p_i^(1/2)
 ///  note that sqrt(x) is precomputed, so don't call this function x.
 ///
+__global__ void global::addToArray(uint64_t * a, size_t len, uint64_t c)
+{
+  uint64_t tidx = threadIdx.x + blockDim.x * blockIdx.x;
+  if(tidx < len)
+    a[tidx] += c;
+}
+
 __global__ void global::sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len)
 {
   uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;

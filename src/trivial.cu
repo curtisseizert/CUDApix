@@ -51,9 +51,9 @@ uint64_t S2_trivial(uint64_t x, uint64_t y)
   thrust::upper_bound(thrust::device, hi.d_primes, hi.d_primes + hi.len, lo.d_primes, lo.d_primes + lo.len, lo.d_primes);
 
   x_minus_array(lo.d_primes, (uint64_t) hi.len, lo.len);
-
-  uint64_t u = thrust::reduce(thrust::device, lo.d_primes, lo.d_primes + lo.len);
-  u += hi.len*(hi.len - 1)/2;
+  uint64_t u = hi.len*(hi.len - 1)/2;
+  std::cout << "S1 = " << u << std::endl;
+  u += thrust::reduce(thrust::device, lo.d_primes, lo.d_primes + lo.len);
 
   cudaFree(lo.d_primes);
   cudaFree(hi.d_primes);

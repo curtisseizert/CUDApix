@@ -72,8 +72,8 @@ int main(int argc, char ** argv)
     // uint64_t p0 = ordinary(x, y, c);
     // std::cout << p0 << std::endl;
 
-    pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
-    std::cout << "pi = " << pi << std::endl;
+    // pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
+    // std::cout << "pi = " << pi << std::endl;
 
     pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;

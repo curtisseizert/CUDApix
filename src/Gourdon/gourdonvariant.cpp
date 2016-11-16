@@ -36,17 +36,20 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
 {
   GourdonVariant64 * pi_gourdon = new GourdonVariant64(x, y, c);
 
-  uint64_t a, b, s, w, p0;
+  uint64_t a;//, b, s, w, p0;
 
   std::cout << "starting a" << std::endl;
   //
   // a = pi_gourdon->A_large();
   // std::cout << "A = " << a << "\n" << std::endl;
 
-  // a = pi_gourdon->A();
-  // std::cout << "A (gpu) = " << a << "\n" << std::endl;
+  a = pi_gourdon->A();
+  std::cout << "A (gpu) = " << a << "\n" << std::endl;
 
-  a = pi_gourdon->A_cpu();
+  // a = pi_gourdon->A_cpu();
+  // std::cout << "A (cpu) = " << a << "\n" << std::endl;
+
+  a = pi_gourdon->A2_cpu();
   std::cout << "A (cpu) = " << a << "\n" << std::endl;
 
   // b = pi_gourdon->B();

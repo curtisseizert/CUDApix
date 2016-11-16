@@ -32,6 +32,7 @@ public:
   uint64_t A_large();
   uint64_t checkA();
   uint64_t A_cpu();
+  uint64_t A2_cpu();
 
   uint64_t B();
 

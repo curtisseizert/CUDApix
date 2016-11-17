@@ -44,12 +44,14 @@ _OBJS =\
  general/device_functions.o \
  Gourdon/gourdonvariant.o \
  Gourdon/sigma.o \
+ Gourdon/sigma_cpu.o \
  Gourdon/phi_0.o \
  Gourdon/A1.o \
  Gourdon/A2.o \
  Gourdon/A_cpu.o \
  Gourdon/A2_cpu.o \
  Gourdon/B.o \
+ Gourdon/C_cpu.o \
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/S2.o \
  Deleglise-Rivat/S3.o \

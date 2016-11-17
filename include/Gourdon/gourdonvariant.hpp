@@ -17,6 +17,14 @@ private:
   int64_t sigma4();
   int64_t sigma5();
   int64_t sigma6();
+
+  int64_t sigma0_cpu();
+  int64_t sigma1_cpu();
+  int64_t sigma2_cpu();
+  int64_t sigma3_cpu();
+  int64_t sigma4_cpu();
+  int64_t sigma5_cpu();
+  int64_t sigma6_cpu();
 public:
 
   static uint64_t piGourdon(uint64_t x, uint64_t y, uint16_t c);
@@ -36,7 +44,10 @@ public:
 
   uint64_t B();
 
+  uint64_t C_cpu();
+
   int64_t sigma();
+  int64_t sigma_cpu();
 
   uint64_t phi_0();
 };

@@ -25,7 +25,7 @@ int64_t GourdonVariant64::sigma()
   s[6] = sigma6();
 
   for(uint16_t i = 0; i < 7; i++){
-    // std::cout << "Sigma " << i << " = " << s[i] << std::endl;
+    std::cout << "Sigma " << i << " = " << s[i] << std::endl;
     s_tot += s[i];
   }
 
@@ -116,7 +116,7 @@ int64_t GourdonVariant64::sigma6()
 {
   int64_t s6 = 0;
   PrimeArray p(qrtx + 1, cbrtx);
-  PrimeArray pi(cbrtx, qrtx * sqrt(qrtx));
+  PrimeArray pi(cbrtx, pow(x, (double) 3.0/8.0));
 
   p.d_primes = CudaSieve::getDevicePrimes(p.bottom, p.top, p.len, 0);
   pi.d_primes = CudaSieve::getDevicePrimes(pi.bottom, pi.top, pi.len, 0);

@@ -90,7 +90,7 @@ __global__ void global::sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len)
 {
   uint32_t tidx = threadIdx.x + blockDim.x*blockIdx.x;
 
-  if(tidx < len) p[tidx] = sqrtx / __double2ull_rd(__dsqrt_rd(p[tidx]));
+  if(tidx < len) p[tidx] = sqrtx / __dsqrt_rz(p[tidx]);
 }
 
 ///  For sigma6:

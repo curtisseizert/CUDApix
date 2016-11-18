@@ -78,6 +78,8 @@ int main(int argc, char ** argv)
     pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;
 
+    std::cout << "#C = " << leafcount::gourdon_C_simple(x, y) << std::endl;
+
     cudaDeviceReset();
     return 0;
 }

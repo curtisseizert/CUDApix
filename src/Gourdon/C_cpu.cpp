@@ -24,10 +24,11 @@ uint64_t GourdonVariant64::C_cpu()
   uint64_t sum = 0;
 
   uint64_t pi_sqrty = CudaSieve::countPrimes((uint64_t)0, (uint64_t) std::sqrt(y));
+  uint64_t pi_cbrtz = CudaSieve::countPrimes((uint64_t)0, (uint64_t) std::cbrt(z));
   uint32_t num_p = pi_qrtx - pi_sqrty;
 
   uint64_t upper_bound = y;
-  uint64_t lower_bound = std::sqrt(y);
+  uint64_t lower_bound = std::cbrt(z);
   size_t len; // this will hold the number of q values
 
   // get a list of primes for the p and q
@@ -48,9 +49,9 @@ uint64_t GourdonVariant64::C_cpu()
   // transition to a segmented version)
   uint32_t * firstQ = (uint32_t *)malloc((pi_qrtx - pi_sqrty) * sizeof(uint32_t));
   #pragma omp parallel for
-  for(uint32_t i = 0; i < num_p; i++)
-    firstQ[i] = upperBound(pq, 0, len, x / (pq[i] * pq[i] * pq[i])) + 1;
-
+  for(uint32_t i = 0; i < num_p; i++){
+    firstQ[i] = upperBound(pq, 0, len, x / (pq[i] * pq[i] * pq[i]) + 1);
+  }
   // We now iterate through our list of p's and q's with p's in the outer for
   // loop and q's in the inner one.  Also using openMP because I paid for those
   // cores...
@@ -66,12 +67,12 @@ uint64_t GourdonVariant64::C_cpu()
       uint64_t pi_quot = h_pitable[(quot + 1)/2];
 
       // now add (2 - pi(p))
-      sum += (2 - (i + pi_sqrty));
+      sum += 2 - (i + pi_cbrtz);
 
       // and pi(x/pq)
       sum += pi_quot;
     }
   }
 
-  return sum;
+3  return sum;
 }

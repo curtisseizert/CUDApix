@@ -258,7 +258,7 @@ void S2dev::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
     }
   }
 
-  s_sums[threadIdx.x] -= muPhi;
+  // s_sums[threadIdx.x] -= muPhi;
 }
 
 __global__ void S2glob::S2ctl(S2data_64 * data)

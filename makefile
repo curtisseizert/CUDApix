@@ -17,9 +17,8 @@ HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills -g -lineinfo
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR) -I ./
 LIBNAME = cudasieve
-CC_LIBS = -lm -lstdc++
-NVCC_LIBS = -lcudart -lm -lstdc++ -l$(LIBNAME)
-
+CC_LIBS = -lm -lstdc++ -lboost_iostreams -lboost_system -lboost_filesystem
+NVCC_LIBS = -lcudart -lm -lstdc++ -l$(LIBNAME) -lboost_iostreams -lboost_system -lboost_filesystem
 CLI_SRC_DIR = src
 SRC_DIR = src
 OBJ_DIR = obj
@@ -55,7 +54,8 @@ _OBJS =\
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/S2.o \
  Deleglise-Rivat/S3.o \
- Deleglise-Rivat/sigma.o
+ Deleglise-Rivat/sigma.o \
+ gnuplot/gnuplot.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 DIRS = obj/Deleglise-Rivat \
  obj/general \

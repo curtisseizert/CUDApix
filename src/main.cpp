@@ -5,14 +5,12 @@
 #include <uint128_t.cuh>
 #include <string>
 #include <CUDASieve/cudasieve.hpp>
-#include <cuda_profiler_api.h>
 
-#include "trivial.cuh"
+#include "gnuplot.hpp"
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 #include "general/leafcount.hpp"
 #include "general/tools.hpp"
 #include "Gourdon/gourdonvariant.hpp"
-#include "P2.cuh"
 #include "pitable.cuh"
 
 uint128_t calc(char * argv);
@@ -74,6 +72,8 @@ int main(int argc, char ** argv)
 
     // pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
     // std::cout << "pi = " << pi << std::endl;
+
+    gnuplotOmega(x, y, c);
 
     pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;

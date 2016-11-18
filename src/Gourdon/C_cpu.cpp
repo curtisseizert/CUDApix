@@ -28,7 +28,7 @@ uint64_t GourdonVariant64::C_cpu()
   uint32_t num_p = pi_qrtx - pi_sqrty;
 
   uint64_t upper_bound = y;
-  uint64_t lower_bound = std::cbrt(z);
+  uint64_t lower_bound = std::sqrt(y);
   size_t len; // this will hold the number of q values
 
   // get a list of primes for the p and q
@@ -67,12 +67,12 @@ uint64_t GourdonVariant64::C_cpu()
       uint64_t pi_quot = h_pitable[(quot + 1)/2];
 
       // now add (2 - pi(p))
-      sum += 2 - (i + pi_cbrtz);
+      sum += 2 - (i + pi_sqrty);
 
       // and pi(x/pq)
       sum += pi_quot;
     }
   }
 
-3  return sum;
+  return sum;
 }

@@ -7,6 +7,7 @@
 #include <CUDASieve/cudasieve.hpp>
 
 #include "gnuplot.hpp"
+#include "ordinary.cuh"
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 #include "general/leafcount.hpp"
 #include "general/tools.hpp"
@@ -43,7 +44,7 @@ int main(int argc, char ** argv)
       alpha = getAlpha(x);
       y = alpha * cbrt(x);
     }
-
+    //
     // if(argc > 4){
     //   std::cerr << "Unexpected input." << std::endl;
     //   return 1;
@@ -67,18 +68,15 @@ int main(int argc, char ** argv)
     std::cout << "z = " << x/y << std::endl;
     std::cout << "c = " << c << std::endl;
 
-    // uint64_t p0 = ordinary(x, y, c);
-    // std::cout << p0 << std::endl;
-
     // pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
     // std::cout << "pi = " << pi << std::endl;
 
-    gnuplotOmega(x, y, c);
+    // gnuplotA_Omega(x, y, c);
 
     pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;
 
-    std::cout << "#C = " << leafcount::gourdon_C_simple(x, y) << std::endl;
+    // std::cout << "#A = " << leafcount::gourdon_A(x) << std::endl;
 
     cudaDeviceReset();
     return 0;

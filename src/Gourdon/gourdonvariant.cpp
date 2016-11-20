@@ -38,28 +38,34 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
 
   uint64_t a, b, c_res, d, s, p0;
 
-  // a = pi_gourdon->A_large();
-  // std::cout << "A = " << a << "\n" << std::endl;
+  a = pi_gourdon->A_large();
+  std::cout << "A (gpu segmented) = " << a << "\n" << std::endl;
+
+  a = pi_gourdon->A2_cpu();
+  std::cout << "A (cpu segmented) = " << a << "\n" << std::endl;
 
   a = pi_gourdon->A();
   std::cout << "A (gpu) = " << a << "\n" << std::endl;
+  //
+  // a = pi_gourdon->A_cpu();
+  // std::cout << "A (cpu) = " << a << "\n" << std::endl;
 
-  b = pi_gourdon->B();
-  std::cout << "B = " << b << "\n" << std::endl;
+  // b = pi_gourdon->B();
+  // std::cout << "B = " << b << "\n" << std::endl;
+  //
+  // c_res = pi_gourdon->C_cpu();
+  // std::cout << "C (cpu) = " << c_res << "\n" << std::endl;
+  //
+  // d = S2hardHost::S2hard(x, y, c, pi_gourdon->qrtx);
+  // std::cout << "D = " << d << "\n" << std::endl;
+  //
+  // s = pi_gourdon->sigma();
+  // std::cout << "Sigma (gpu) = " << s << "\n" << std::endl;
+  //
+  // p0 = pi_gourdon->phi_0();
+  // std::cout << "phi_0 = " << p0 << "\n" << std::endl;
 
-  c_res = pi_gourdon->C_cpu();
-  std::cout << "C (cpu) = " << c_res << "\n" << std::endl;
 
-  d = S2hardHost::S2hard(x, y, c, pi_gourdon->qrtx);
-  std::cout << "D = " << d << "\n" << std::endl;
-
-  s = pi_gourdon->sigma();
-  std::cout << "Sigma (gpu) = " << s << "\n" << std::endl;
-
-  p0 = pi_gourdon->phi_0();
-  std::cout << "phi_0 = " << p0 << "\n" << std::endl;
-
-
-  return a - b + c_res + d + s + p0;
+  return 0;//a - b + c_res + d + s + p0;
 
 }

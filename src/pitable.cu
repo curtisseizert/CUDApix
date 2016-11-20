@@ -5,7 +5,7 @@
 
 #include "pitable.cuh"
 
-const uint16_t threadsPerBlock = 512;
+const uint16_t threadsPerBlock = 256;
 
 uint32_t * get_d_piTable(uint32_t hi)
 {
@@ -64,6 +64,7 @@ void PiTable::allocate()
 {
   if(d_pitable == NULL) cudaMalloc(&d_pitable, range/2 * sizeof(uint32_t));
   allocatedRange = range;
+  cudaMemsetAsync(d_pitable, 0, range/2*sizeof(uint32_t));
 }
 
 void PiTable::reallocate()
@@ -71,6 +72,7 @@ void PiTable::reallocate()
   if(d_pitable != NULL) cudaFree(d_pitable);
   cudaMalloc(&d_pitable, range/2 * sizeof(uint32_t));
   allocatedRange = range;
+  cudaMemsetAsync(d_pitable, 0, range/2*sizeof(uint32_t));
 }
 
 uint32_t * PiTable::getNextUp()
@@ -82,6 +84,7 @@ uint32_t * PiTable::getNextUp()
 
   uint64_t * d_primes = CudaSieve::getDevicePrimes(base, base + range, len, 0);
 
+  cudaDeviceSynchronize();
   transposePrimes<<<1 + len/threadsPerBlock, threadsPerBlock>>>(d_primes, d_pitable, base, range, len, pi_base);
   cudaDeviceSynchronize();
   cudaFree(d_primes);
@@ -106,7 +109,7 @@ uint32_t * PiTable::getNextDown()
   pi_base -= len;
   // std::cout << base << " " << len << std::endl;
 
-
+  cudaDeviceSynchronize();
   transposePrimes<<<1 + len/threadsPerBlock, threadsPerBlock>>>(d_primes, d_pitable, base, range, len, pi_base);
   cudaDeviceSynchronize();
   cudaFree(d_primes);
@@ -122,6 +125,7 @@ uint32_t * PiTable::getCurrent()
 
   uint64_t * d_primes = CudaSieve::getDevicePrimes(base, base + range, len, 0);
 
+  cudaDeviceSynchronize();
   transposePrimes<<<1 + len/threadsPerBlock, threadsPerBlock>>>(d_primes, d_pitable, base, range, len, pi_base);
   cudaDeviceSynchronize();
   cudaFree(d_primes);
@@ -203,7 +207,7 @@ void transposePrimes(uint64_t * d_primes, uint32_t * d_pitable, uint64_t bottom,
       hi = (d_primes[tidx + 1] - bottom)/2 + 1;
     }else{
       lo = (d_primes[tidx] - bottom)/2 + 1;
-      hi = range/2;
+      hi = (4 + range)/2;
     }
 
     while(lo < hi){

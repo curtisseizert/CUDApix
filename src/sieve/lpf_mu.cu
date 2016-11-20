@@ -57,12 +57,12 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint32_t * d_lpf, uint32_t pr
 __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t primeListLength, uint16_t sieveWords, uint64_t bottom)
 {
   uint64_t bstart = 2 * blockIdx.x * sieveWords + bottom;
-  __shared__ extern uint32_t s_lpf32[];
+  __shared__ extern uint64_t s_lpf64[];
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
-     s_lpf32[i] = 2 * i + bstart + 1;
+     s_lpf64[i] = 2 * i + bstart + 1;
      for(uint16_t j = 0; j < numSmallPrimes; j++){
-       if((2*i+1 + bstart) % smallPrimes[j] == 0) atomicMin((unsigned long long *)&s_lpf32[i], (unsigned long long)smallPrimes[j]);
+       if((2*i+1 + bstart) % smallPrimes[j] == 0) atomicMin((unsigned long long *)&s_lpf64[i], (unsigned long long)smallPrimes[j]);
      }
   }
 
@@ -73,13 +73,13 @@ __global__ void lpf_kernel(uint32_t * d_primeList, uint64_t * d_lpf, uint32_t pr
       uint32_t off = p - bstart % p;
       if(off%2==0) off += p;
       off = off >> 1;
-      for(; off < sieveWords; off += p) atomicMin((unsigned long long *)&s_lpf32[off], (unsigned long long)p);
+      for(; off < sieveWords; off += p) atomicMin((unsigned long long *)&s_lpf64[off], (unsigned long long)p);
   }
 
   __syncthreads();
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x)
-      d_lpf[i + sieveWords*blockIdx.x] = s_lpf32[i];
+      d_lpf[i + sieveWords*blockIdx.x] = s_lpf64[i];
 
   __syncthreads();
 

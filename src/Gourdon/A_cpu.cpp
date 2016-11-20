@@ -26,7 +26,7 @@ uint64_t GourdonVariant64::A_cpu()
   // this is the number of p values we will iterate over
   uint64_t num_p = pi_cbrtx - pi_qrtx;
 
-  uint64_t upper_bound = sqrt(x / qrtx); // x^(3/8)
+  uint64_t upper_bound = pow(x, (double)0.375); // x^(3/8)
   uint64_t lower_bound = qrtx;  // x^(1/4)
   size_t len; // this will hold the number of q values
 
@@ -47,10 +47,10 @@ uint64_t GourdonVariant64::A_cpu()
   // We now iterate through our list of p's and q's with p's in the outer for
   // loop and q's in the inner one.  Also using openMP because I paid for those
   // cores...
-  #pragma omp parallel for schedule(dynamic) reduction(+:sum)
-  for(uint32_t i = 0; i < num_p; i++){ // p values
+  // #pragma omp parallel for schedule(dynamic) reduction(+:sum)
+  for(uint32_t i =0; i < num_p; i++){ // p values
     uint64_t p = pq[i];
-    uint64_t maxQ = std::sqrt(x/p); // upper bound for q
+    uint64_t maxQ = /*pow(x, (double) 5.0/8.0)/p - 1;*/std::sqrt(x/p); // upper bound for q
 
     for(uint32_t j = i + 1; pq[j] <= maxQ; j++){ // q values
       uint64_t q = pq[j];
@@ -62,6 +62,7 @@ uint64_t GourdonVariant64::A_cpu()
 
       // we now double pi_quot if quot is < y (to account for the chi term)
       pi_quot += (quot < y) ? pi_quot : 0;
+      // std::cout << pi_quot << std::endl;
 
       sum += pi_quot;
     }

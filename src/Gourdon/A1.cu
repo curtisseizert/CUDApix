@@ -102,7 +102,7 @@ uint64_t calculatePiChi(uint64_t quot, uint64_t y, uint32_t * d_pitable)
   uint64_t r = d_pitable[(quot + 1)/2];
   if(quot < y)
     r <<= 1;
-  return r;
+  return (uint64_t)r;
 }
 
 

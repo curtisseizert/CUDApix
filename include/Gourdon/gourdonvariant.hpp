@@ -44,6 +44,7 @@ public:
 
   uint64_t B();
 
+  uint64_t C();
   uint64_t C_cpu();
 
   int64_t sigma();

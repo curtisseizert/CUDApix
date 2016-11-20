@@ -50,6 +50,7 @@ _OBJS =\
  Gourdon/A_cpu.o \
  Gourdon/A2_cpu.o \
  Gourdon/B.o \
+ Gourdon/C.o \
  Gourdon/C_cpu.o \
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/S2.o \

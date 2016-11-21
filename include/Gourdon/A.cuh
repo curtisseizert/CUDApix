@@ -27,26 +27,6 @@ void A_large_loPQ(uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
                   uint32_t * nextQ, uint32_t * lastQ, uint32_t maxQidx);
 
 __global__
-void A_large_hiPQ(uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
-                  uint64_t pi_0, uint64_t base, uint32_t pMinIdx, uint32_t pMaxIdx,
-                  uint64_t * sums, uint32_t * nextQ, uint32_t * lastQ, uint32_t maxQidx);
-
-__global__
-void A_large_lastPQ(uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
-                  uint64_t pi_0, uint64_t base, uint32_t pMinIdx, uint32_t pMaxIdx,
-                  uint64_t * sums, uint32_t * nextQ, uint32_t maxQidx);
-
-__global__
-void A_large_loPQ_vert_a( uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
-                        uint64_t pi_0, uint64_t base, uint32_t pMaxIdx, uint64_t * sums,
-                        uint32_t * nextQ, uint32_t * lastQ, uint32_t maxQidx);
-
-__global__
-void A_large_loPQ_vert_b( uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
-                        uint64_t pi_0, uint64_t base, uint32_t pMaxIdx, uint64_t * sums,
-                        uint32_t * nextQ, uint32_t * lastQ, uint32_t maxQidx);
-
-__global__
 void A_large_hiPQ_vert(uint64_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
                         uint64_t pi_0, uint64_t base, uint32_t pMinIdx, uint32_t pMaxIdx,
                         uint64_t * sums, uint32_t * nextQ, uint32_t * lastQ, uint32_t maxQidx);

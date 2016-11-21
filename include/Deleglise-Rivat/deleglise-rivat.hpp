@@ -29,6 +29,31 @@ public:
 
 };
 
+class deleglise_rivat128{
+private:
+  uint16_t c;
+  uint128_t x;
+  uint64_t y, z, sqrtx, cbrtx, qrtx, sqrtz;
+  uint64_t pi_y, pi_cbrtx, pi_sqrtz, pi_qrtx, pi_sqrtx;
+
+  uint128_t sigma1() const;
+  uint128_t sigma2() const;
+  uint128_t sigma3() const;
+  uint128_t sigma4() const;
+  uint128_t sigma5() const;
+  uint128_t sigma6() const;
+
+  uint128_t A();
+
+  void calculateBounds();
+  void calculatePiValues();
+
+  deleglise_rivat128(uint128_t x, uint64_t y, uint16_t c);
+
+public:
+  static uint128_t pi_deleglise_rivat(uint128_t x, uint64_t y, uint16_t c);
+};
+
 inline void xOverPY(uint64_t * p, uint128_t x, uint64_t y, size_t len);
 inline void xOverPY(uint64_t * p, uint64_t x, uint64_t y, size_t len);
 inline void xOverPSquared(uint64_t * p, uint128_t x, size_t len);

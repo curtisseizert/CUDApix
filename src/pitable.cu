@@ -62,7 +62,7 @@ uint64_t PiTable::setMaxRange()
 
 void PiTable::allocate()
 {
-  if(d_pitable == NULL) cudaMalloc(&d_pitable, range/2 * sizeof(uint32_t));
+  if(d_pitable == NULL) cudaMalloc(&d_pitable, 8 + range/2 * sizeof(uint32_t));
   allocatedRange = range;
   cudaMemsetAsync(d_pitable, 0, range/2*sizeof(uint32_t));
 }
@@ -70,7 +70,7 @@ void PiTable::allocate()
 void PiTable::reallocate()
 {
   if(d_pitable != NULL) cudaFree(d_pitable);
-  cudaMalloc(&d_pitable, range/2 * sizeof(uint32_t));
+  cudaMalloc(&d_pitable, 8 + range/2 * sizeof(uint32_t));
   allocatedRange = range;
   cudaMemsetAsync(d_pitable, 0, range/2*sizeof(uint32_t));
 }

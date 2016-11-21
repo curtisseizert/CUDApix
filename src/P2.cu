@@ -38,9 +38,9 @@ uint128_t P2(uint128_t x, uint64_t y)
       lo.bottom += lo.bottom & 1ull; // make sure bounds of sieving intervals are even
 
       // Get primes P1 such that y < p < sqrt(x)
-      lo.d_primes = CudaSieve::getDevicePrimes(lo.bottom, lo.top, lo.len, 1);
+      lo.d_primes = CudaSieve::getDevicePrimes(lo.bottom, lo.top, lo.len, 0);
       // Get primes P2 such that x/y > p > sqrt(x)
-      hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 1);
+      hi.d_primes = CudaSieve::getDevicePrimes(hi.bottom, hi.top, hi.len, 0);
 
 
       divXbyY(x, lo.d_primes, lo.len);

@@ -23,45 +23,45 @@ double getAlpha(uint128_t x);
 int main(int argc, char ** argv)
 {
     double alpha;
-    uint64_t x = pow(10, 12);
-    // uint128_t x = (uint128_t)1 << 70;
-    uint64_t y = 0, pi = 0;
+    // uint64_t x = pow(10, 12);
+    uint128_t x = (uint128_t)1 << 70;
+    uint64_t y = 0;
     uint32_t c = 6;
     uint64_t s3 = 0;
+
+    // if(argc > 4){
+    //   std::cerr << "Unexpected input." << std::endl;
+    //   return 1;
+    // }else{
+    //   for(uint16_t i = 1; i < argc; i++){
+    //     if(i == 1) x = echo(argv[1]);
+    //     if(i == 2) y = echo(argv[2]);
+    //     if(i == 3) c = echo(argv[3]);
+    //   }
+    // }
+    //
+    // if( y == 0){
+    //   alpha = getAlpha(x);
+    //   y = alpha * cbrt(x);
+    // }
 
     if(argc > 4){
       std::cerr << "Unexpected input." << std::endl;
       return 1;
     }else{
       for(uint16_t i = 1; i < argc; i++){
-        if(i == 1) x = echo(argv[1]);
+        if(i == 1) x = calc(argv[1]);
         if(i == 2) y = echo(argv[2]);
         if(i == 3) c = echo(argv[3]);
       }
     }
 
-    if( y == 0){
+    if(y == 0){
       alpha = getAlpha(x);
-      y = alpha * cbrt(x);
+      y = uint128_t::sqrt(x);
+      y = pow(y, (double)2.0/3.0);
+      y *= alpha;
     }
-    //
-    // if(argc > 4){
-    //   std::cerr << "Unexpected input." << std::endl;
-    //   return 1;
-    // }else{
-    //   for(uint16_t i = 1; i < argc; i++){
-    //     if(i == 1) x = calc(argv[1]);
-    //     if(i == 2) y = echo(argv[2]);
-    //     if(i == 3) c = echo(argv[3]);
-    //   }
-    // }
-    //
-    // if(y == 0){
-    //   alpha = getAlpha(x);
-    //   y = uint128_t::sqrt(x);
-    //   y = pow(y, (double)2.0/3.0);
-    //   y *= alpha;
-    // }
 
     std::cout << "x = " << x << std::endl;
     std::cout << "y = " << y << std::endl;
@@ -72,8 +72,8 @@ int main(int argc, char ** argv)
     // std::cout << "pi = " << pi << std::endl;
 
     // gnuplotA_Omega(x, y, c);
-
-    pi = GourdonVariant64::piGourdon(x, y, c);
+    uint128_t pi = deleglise_rivat128::pi_deleglise_rivat(x, y, c);
+    // pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;
 
     // std::cout << "#A = " << leafcount::gourdon_A(x) << std::endl;

@@ -53,6 +53,7 @@ _OBJS =\
  Gourdon/C.o \
  Gourdon/C_cpu.o \
  Deleglise-Rivat/deleglise-rivat.o \
+ Deleglise-Rivat/A4.o \
  Deleglise-Rivat/S2.o \
  Deleglise-Rivat/S3.o \
  Deleglise-Rivat/sigma.o \
@@ -77,7 +78,7 @@ $(CS_LIB):
 	@+ ./build_cudasieve.sh $(CUDASIEVE_DIR) libcudasieve.a
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu
-	@ $(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
+	@$(NVCC) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
 	@echo "     CUDA     " $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp

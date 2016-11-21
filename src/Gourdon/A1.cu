@@ -51,6 +51,8 @@ uint64_t GourdonVariant64::A()
   PiTable * pi_table = new PiTable(sqrtx);
   uint32_t * d_pitable = pi_table->getCurrent();
 
+  cudaFuncSetCacheConfig(A_lo_p_reg, cudaFuncCachePreferEqual);
+
   blocks = 1 + ((pq.len)/threadsPerBlock);
   A_lo_p_reg<<<blocks, threadsPerBlock>>>(x, pq.d_primes, d_sums, y, num_p, pq.len, d_pitable);
   cudaDeviceSynchronize();

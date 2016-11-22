@@ -6,7 +6,7 @@ Curtis Seizert <cseizert@gmail.com>
 */
 
 #include <gmpxx.h>
-#include "uint128_t.cuh"
+#include "cuda_uint128.h"
 
 #ifndef _P2
 #define _P2

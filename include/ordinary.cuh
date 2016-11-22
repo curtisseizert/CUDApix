@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <stdint.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 uint64_t Ordinary(uint64_t x, uint64_t y, uint16_t c);
 uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c);

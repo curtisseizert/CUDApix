@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <CUDASieve/cudasieve.hpp>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 #include "sieve/S2_hard_host.cuh"
 #include "Gourdon/gourdonvariant.hpp"

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 #include <CUDASieve/cudasieve.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>

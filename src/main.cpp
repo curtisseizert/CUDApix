@@ -2,7 +2,7 @@
 #include <math.h>
 #include <cuda_runtime.h>
 #include <stdint.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 #include <string>
 #include <CUDASieve/cudasieve.hpp>
 
@@ -76,7 +76,6 @@ int main(int argc, char ** argv)
     // pi = GourdonVariant64::piGourdon(x, y, c);
     std::cout << "pi = " << pi << std::endl;
 
-    // std::cout << "#A = " << leafcount::gourdon_A(x) << std::endl;
 
     cudaDeviceReset();
     return 0;
@@ -96,7 +95,7 @@ uint128_t calc(char * argv) // for getting values bigger than the 32 bits that s
   getline(&line, &len, in);
   std::string s = line;
 
-  value = uint128_t::stou128_t(s);
+  value = uint128_t::stou128(s);
 
   return value;
 }

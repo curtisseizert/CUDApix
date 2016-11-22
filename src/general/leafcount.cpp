@@ -1,7 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <CUDASieve/cudasieve.hpp>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 #include <omp.h>
 
 #include "phi.cuh"

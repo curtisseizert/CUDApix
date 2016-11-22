@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include <CUDASieve/cudasieve.hpp>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 #include <math.h>

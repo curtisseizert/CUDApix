@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 
 class GourdonVariant64{

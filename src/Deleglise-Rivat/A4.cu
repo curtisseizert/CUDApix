@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 #include <CUDASieve/cudasieve.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
@@ -73,7 +73,7 @@ uint128_t deleglise_rivat128::A()
   // by underestimating the number of blocks we need
   uint64_t pMax = sqrt(x/pi_table.getNextBaseDown());
   uint32_t pMaxIdx = (uint32_t)upperBound(pq.h_primes, 0, num_p, pMax);
-  uint64_t qMax = (sqrtx * qrtx) / pi_table.getNextBaseDown();
+  uint64_t qMax = uint128_t::mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
   uint32_t qMaxIdx = (uint32_t)upperBound(pq.h_primes, 0, pq.len, qMax);
   uint64_t qMinIdx = 0;
 
@@ -82,7 +82,7 @@ uint128_t deleglise_rivat128::A()
     // nextQ is copied from lastQ each iteration rather than switching pointers
     // to form the basis of a compare and swap operation in the kernel that evaluates
     // whether a given value has changed
-    cudaMemcpyAsync(d_nextQ, d_lastQ, num_p * sizeof(uint32_t), cudaMemcpyDeviceToDevice, stream[1]);
+    cudaMemcpyAsync(d_nextQ, d_lastQ, num_p * sizeof(uint64_t), cudaMemcpyDeviceToDevice, stream[1]);
 
     // get this iteration's pi table and bounds
     uint64_t pi_max = pi_table.get_pi_base();
@@ -91,20 +91,20 @@ uint128_t deleglise_rivat128::A()
     // calculate number of blocks to span maximum range of q values (defined at
     // p = x^(1/4))
     uint32_t blocks = (qMaxIdx - qMinIdx)/threadsPerBlock + 1;
-    std::cout << pi_table.get_base() << " " << pi_table.get_bottom() << " " << blocks << " " << qMaxIdx << " " << qMinIdx << std::endl;
+    std::cout << pi_table.get_base() << " " << pi_table.get_bottom() << " " << blocks << " " << qMaxIdx << " " << pMaxIdx << std::endl;
 
     // launch kernel
     cudaDeviceSynchronize();
     cudaProfilerStart();
-    A_large_loPQ<<<blocks, threadsPerBlock>>>
-      (x, y, pq.d_primes, d_piTable, pi_table.get_pi_base(), pi_table.get_base(),
+    A_large_loPQ<<<blocks, threadsPerBlock, 0, stream[0]>>>
+      (x, y, pq.d_primes, d_piTable, (pi_table.get_pi_base() & (~1ull)), pi_table.get_base(),
       pMaxIdx, d_sums, d_nextQ, d_lastQ, (uint64_t)pq.len);
     cudaProfilerStop();
     // calculate the minimum and maximum p values and indices for next iteration
     qMinIdx = qMaxIdx;
     pMax = sqrt(x/pi_table.getNextBaseDown());
     pMaxIdx = upperBound(pq.h_primes, 0, num_p, pMax);
-    qMax = (sqrtx * qrtx) / pi_table.getNextBaseDown();
+    qMax = uint128_t::mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
     qMaxIdx = upperBound(pq.h_primes, 0, pq.len, qMax);
     cudaDeviceSynchronize();
 
@@ -120,7 +120,7 @@ uint128_t deleglise_rivat128::A()
   uint32_t pMinIdx = 0;
 
   while(pi_table.get_base() > cbrtx){
-    cudaMemcpyAsync(d_nextQ, d_lastQ, num_p * sizeof(uint32_t), cudaMemcpyDeviceToDevice, stream[1]);
+    cudaMemcpyAsync(d_nextQ, d_lastQ, num_p * sizeof(uint64_t), cudaMemcpyDeviceToDevice, stream[1]);
 
     // get this iteration's pi table and bounds
     uint64_t pi_max = pi_table.get_pi_base();
@@ -134,7 +134,7 @@ uint128_t deleglise_rivat128::A()
     // launch kernel
     cudaDeviceSynchronize();
     cudaProfilerStart();
-    A_large_hiPQ_vert<<<blocks, threadsPerBlock>>>
+    A_large_hiPQ_vert<<<blocks, threadsPerBlock, 0, stream[0]>>>
       (x, y, pq.d_primes, d_piTable, pi_table.get_pi_base(), pi_table.get_base(),
       pMinIdx, pMaxIdx, d_sums, d_nextQ, d_lastQ, (uint32_t)pq.len);
     cudaProfilerStop();
@@ -179,15 +179,16 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
   for(uint64_t j = 0; j < pMaxIdx - 1; j += 256){
     s_lastQ[threadIdx.x] = (uint64_t)-1;
     __syncthreads();
-    for(uint64_t i = j; i < min((uint32_t)pMaxIdx - 1, (uint32_t)j + 256); i++){
+    for(uint64_t i = j; i < min((uint32_t)pMaxIdx, (uint32_t)j + 256); i++){
 
-      uint32_t qidx = nextQ[i] + tidx;
+      uint64_t qidx = nextQ[i] + tidx;
       if(qidx >= maxQidx) {atomicCAS((unsigned long long *)&s_lastQ[0], (unsigned long long)-1, (unsigned long long)maxQidx); break;}
       uint64_t q = pq[qidx];
       uint64_t p = pq[i];
 
       // calculate x/(p * q) and store value in q
-      q = uint128_t::div128(x, (p * q));
+      q *= p;
+      q = uint128_t::div128(x, q);
 
       // check to make sure quotient is > pi_0, and coordinate this block's value
       // of lastQ if not
@@ -246,9 +247,9 @@ hiPQ_end:
 }
 
 __device__
-inline uint64_t checkRange(uint64_t  q, uint64_t base, uint64_t & s_lastQ, uint64_t qidx)
+inline uint64_t checkRange(uint64_t q, uint64_t base, uint64_t & s_lastQ, uint64_t qidx)
 {
-  if(q < base){
+  if(q + 1 < base){
     atomicMin((unsigned long long *)&s_lastQ, (unsigned long long)qidx);
     q = 0;
   }
@@ -259,9 +260,6 @@ __device__
 inline uint64_t calculatePiChi(uint64_t q, uint64_t y, uint32_t * d_pitable,
                                 uint64_t pi_0, uint64_t base)
 {
-  // if(threadIdx.x == 0 && blockIdx.x == 0 && (q + 1 - (base & ~1ull))/2 >= 536870912)
-  //   printf("%llu\t%llu\n", (q + 1 - (base & ~1ull))/2, pi_0);
-
   uint64_t r = d_pitable[(q + 1 - (base & ~1ull))/2] + pi_0;
 
   // for some reason doing this with ptx cuts about 5% off overall run time

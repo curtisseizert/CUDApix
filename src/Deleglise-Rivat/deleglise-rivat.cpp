@@ -2,7 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <CUDASieve/cudasieve.hpp>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
 #include "P2.cuh"
@@ -119,14 +119,14 @@ uint128_t deleglise_rivat128::pi_deleglise_rivat(uint128_t x, uint64_t y, uint16
 
   // p2 = P2(x, y);
 
-  std::cout << pi_dr.A() << std::endl;
+  std::cout << pi_dr.A_cpu() << std::endl;
 
-  std::cout << pi_dr.sigma1()<< std::endl;
-  std::cout << pi_dr.sigma2()<< std::endl;
-  std::cout << pi_dr.sigma3()<< std::endl;
-  std::cout << pi_dr.sigma4()<< std::endl;
-  std::cout << pi_dr.sigma5()<< std::endl;
-  std::cout << pi_dr.sigma6()<< std::endl;
+  // std::cout << pi_dr.sigma1()<< std::endl;
+  // std::cout << pi_dr.sigma2()<< std::endl;
+  // std::cout << pi_dr.sigma3()<< std::endl;
+  // std::cout << pi_dr.sigma4()<< std::endl;
+  // std::cout << pi_dr.sigma5()<< std::endl;
+  // std::cout << pi_dr.sigma6()<< std::endl;
 
 
   std::cout << "pi(x) = phi(x, a) - 1 + a - P2(x, a), where a = pi(y)" << std::endl;

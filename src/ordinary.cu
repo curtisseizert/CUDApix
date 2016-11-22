@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <CUDASieve/cudasieve.hpp>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 #include "sieve/phisieve_host.cuh"
 #include "phi.cuh"

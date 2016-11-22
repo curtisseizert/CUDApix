@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <cuda.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 #ifndef _DEVICE_FUNCTIONS_CUDAPIX
 #define _DEVICE_FUNCTIONS_CUDAPIX

@@ -15,7 +15,7 @@
 #include "trivial.cuh"
 #include "CUDASieve/cudasieve.hpp"
 #include "general/device_functions.cuh"
-#include "uint128_t.cuh"
+#include "cuda_uint128.h"
 
 const uint16_t threadsPerBlock = 256;
 

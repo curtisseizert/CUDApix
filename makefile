@@ -54,6 +54,7 @@ _OBJS =\
  Gourdon/C_cpu.o \
  Deleglise-Rivat/deleglise-rivat.o \
  Deleglise-Rivat/A4.o \
+ Deleglise-Rivat/A4_cpu.o \
  Deleglise-Rivat/S2.o \
  Deleglise-Rivat/S3.o \
  Deleglise-Rivat/sigma.o \
@@ -62,7 +63,8 @@ OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))
 DIRS = obj/Deleglise-Rivat \
  obj/general \
  obj/Gourdon \
- obj/sieve
+ obj/sieve \
+ obj/gnuplot
 
 PHI_SRC = src/utils/phi.cpp
 

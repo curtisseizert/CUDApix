@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <uint128_t.cuh>
+#include <cuda_uint128.h>
 
 class deleglise_rivat64{
 private:
@@ -44,6 +44,7 @@ private:
   uint128_t sigma6() const;
 
   uint128_t A();
+  uint128_t A_cpu();
 
   void calculateBounds();
   void calculatePiValues();

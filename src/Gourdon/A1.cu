@@ -111,7 +111,7 @@ uint64_t calculatePiChi(uint64_t quot, uint64_t y, uint32_t * d_pitable)
 __device__
 inline uint64_t checkAndDiv(uint64_t q, uint64_t p, uint64_t x)
 {
-  uint64_t quot = (q <= __dsqrt_rd(x/p) && q != 0) ? x/(p * q) : 0;
+  uint64_t quot = (q <= _isqrt(x/p) && q != 0) ? x/(p * q) : 0;
   quot = (p < q ? quot : 0);
 
   return quot;

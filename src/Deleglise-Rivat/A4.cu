@@ -147,7 +147,6 @@ uint128_t deleglise_rivat128::A()
     cudaDeviceSynchronize();
   }
 
-
   uint128_t sum2 = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks) - sum;
   std::cout << "Hi PQ:\t" << sum2 << std::endl;
 
@@ -187,8 +186,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
       uint64_t p = pq[i];
 
       // calculate x/(p * q) and store value in q
-      q *= p;
-      q = uint128_t::div128(x, q);
+      q = uint128_t::div128(x, (p * q));
 
       // check to make sure quotient is > pi_0, and coordinate this block's value
       // of lastQ if not
@@ -196,7 +194,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
 
       // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
       if(q != 0)
-        s_pi_chi[threadIdx.x] += calculatePiChi(q, y, d_pitable, i/*pi_0*/, base);
+        s_pi_chi[threadIdx.x] += 1;//calculatePiChi(q, y, d_pitable, pi_0, base);
     } // repeat for all p values in range
     __syncthreads();
 
@@ -220,10 +218,11 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
 
   uint64_t p, qidx, maxQ;
   if(tidx + pMinIdx > pMaxIdx) goto hiPQ_end;
+  // if(tidx < 24 || tidx >= 30) goto hiPQ_end;
   p = pq[tidx + pMinIdx];
   qidx = max((unsigned long long)tidx + pMinIdx + 1, (unsigned long long)nextQ[tidx + pMinIdx]);
-  maxQ = min(x / (p * base), (uint64_t) uint128_t::sqrt(x/p));
-
+  maxQ = min(x / (p * base), _isqrt(x/p));
+  // printf("%llu %llu\n", tidx, maxQ);
   while(qidx < maxQidx){
     uint64_t q = pq[qidx];
     if(q > maxQ) break;
@@ -231,7 +230,7 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
     q = uint128_t::div128(x, (p * q));
 
     // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
-    s_pi_chi[threadIdx.x] += calculatePiChi(q, y, d_pitable, pi_0, base);
+    s_pi_chi[threadIdx.x] += 1;//calculatePiChi(q, y, d_pitable, pi_0, base);
 
     qidx++;
     q = pq[qidx];
@@ -260,15 +259,15 @@ __device__
 inline uint64_t calculatePiChi(uint64_t q, uint64_t y, uint32_t * d_pitable,
                                 uint64_t pi_0, uint64_t base)
 {
-  uint64_t r = d_pitable[(q + 1 - (base & ~1ull))/2] + pi_0;
+  // uint64_t r = d_pitable[(q + 1 - (base & ~1ull))/2] + pi_0;
 
   // for some reason doing this with ptx cuts about 5% off overall run time
-  // uint64_t r;
-  // uint32_t *ptr = &d_pitable[(q + 1 - (base & ~1ull))/2];
-  // asm("ld.global.u32.ca   %0, [%1];\n\t"
-  //      : "=l" (r)
-  //      : "l" (ptr));
-  // r += pi_0;
+  uint64_t r;
+  uint32_t *ptr = &d_pitable[(q + 1 - (base & ~1ull))/2];
+  asm("ld.global.u32.ca   %0, [%1];\n\t"
+       : "=l" (r)
+       : "l" (ptr));
+  r += pi_0;
 
   if(q < y)
     r <<= 1;

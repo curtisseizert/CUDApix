@@ -119,6 +119,7 @@ uint128_t deleglise_rivat128::pi_deleglise_rivat(uint128_t x, uint64_t y, uint16
 
   // p2 = P2(x, y);
 
+  std::cout << pi_dr.A() << std::endl;
   std::cout << pi_dr.A_cpu() << std::endl;
 
   // std::cout << pi_dr.sigma1()<< std::endl;

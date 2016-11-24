@@ -82,9 +82,8 @@ uint128_t deleglise_rivat128::A_cpu()
 
         // we now double pi_quot if quot is < y (to account for the chi term)
         pi_quot += (quot < y) ? pi_quot : 0;
-        // std::cout << pi_quot << std::endl;
 
-        sum += pi_quot;
+        sum += 1;//pi_quot;
       }
     }
   }
@@ -110,6 +109,7 @@ uint128_t deleglise_rivat128::A_cpu()
     for(uint32_t i = 0; i < num_p; i++){
       uint64_t p = pq[i];
       uint64_t maxQ = std::sqrt(x/p);
+      // std::cout << i << " " << maxQ << std::endl;
 
       for(; lastQ[i] < len; lastQ[i]++){
         uint64_t q = pq[lastQ[i]];
@@ -122,9 +122,8 @@ uint128_t deleglise_rivat128::A_cpu()
 
         // we now double pi_quot if quot is < y (to account for the chi term)
         pi_quot += (quot < y) ? pi_quot : 0;
-        // std::cout << pi_quot << std::endl;
 
-        sum += pi_quot;
+        sum += 1;//pi_quot;
       }
     }
   }

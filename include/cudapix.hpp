@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <math.h>
+
+#ifdef __CUDA_ARCH__
+#include <math_functions.h>
+#endif
 
 #ifndef _CUDAPIX
 #define _CUDAPIX
@@ -53,23 +58,27 @@ public:
 //   return res;
 // }
 
-__host__ __device__ inline uint64_t isqrt(uint64_t x)
+__host__ __device__ inline uint64_t _isqrt(uint64_t x)
 {
-  uint64_t m, y, b;
-  int64_t t;
-
-  m = 0x4000000000000000LL;
-  y = 0;
-
-  while(m != 0){
-    b = y | m;
-    y = y >> 1;
-    t = (int64_t) (x | ~(x - b)) >> 31;
-    x = x - (b & t);
-    y = y | (m & t);
-    m >>= 2;
+  uint64_t res0 = 0, res1 = 0;
+#ifdef __CUDA_ARCH__
+  res0 = sqrtf(x);
+  while(res0 != res1){
+    res1 = (res0 + x/res0) >> 1;
+    res0 = (res1 + x/res1) >> 1;
+    res1 = (res0 + x/res0) >> 1;
+    res0 = (res1 + x/res1) >> 1;
   }
-  return y;
+#else
+  res0 = sqrt(x);
+  while(res0 != res1){
+    res1 = (res0 + x/res0) >> 1;
+    res0 = (res1 + x/res1) >> 1;
+    res1 = (res0 + x/res0) >> 1;
+    res0 = (res1 + x/res1) >> 1;
+  }
+#endif
+  return res0;
 }
 
 #endif

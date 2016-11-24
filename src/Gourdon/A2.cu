@@ -103,7 +103,7 @@ uint64_t GourdonVariant64::A_large()
     // calculate the minimum and maximum p values and indices for next iteration
     qMinIdx = qMaxIdx;
     pMax = sqrt(x/pi_table.getNextBaseDown());
-    pMaxIdx = upperBound(pq.h_primes, 0, num_p, pMax); 
+    pMaxIdx = upperBound(pq.h_primes, 0, num_p, pMax);
     qMax = (sqrtx * qrtx) / pi_table.getNextBaseDown();
     qMaxIdx = upperBound(pq.h_primes, 0, pq.len, qMax);
     cudaDeviceSynchronize();
@@ -368,7 +368,7 @@ void minLastQ(uint32_t j, uint32_t * s_lastQ, uint32_t * nextQ, uint32_t * lastQ
 __device__
 inline uint64_t checkAndDiv(uint64_t q, uint64_t p, uint64_t x)
 {
-  uint64_t quot = (q <= __dsqrt_rd(x/p) && q != 0) ? x/(p * q) : 0;
+  uint64_t quot = (q <= _isqrt(x/p) && q != 0) ? x/(p * q) : 0;
   quot = (p < q ? quot : 0);
 
   return quot;

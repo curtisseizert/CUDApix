@@ -1,4 +1,6 @@
-// A2.cu
+// A4.cu
+//
+// 128-bit
 //
 // A segmented implemenation of the sum "A" in Xavier Gourdon's variant of the
 // Deleglise-Rivat prime counting algorithm with an upper bound less constrained
@@ -113,6 +115,10 @@ uint128_t deleglise_rivat128::A()
   sum = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
   std::cout << "Low PQ:\t" << sum << std::endl;
 
+  //
+  global::zero<<<maxblocks, threadsPerBlock, 0, stream[0]>>>(d_sums, maxblocks);
+  //
+
   pi_table.set_bottom(cbrtx);
   pMax = sqrt(x/pi_table.getNextBaseDown());
   pMaxIdx = upperBound(pq.h_primes, 0, num_p, pMax);
@@ -147,7 +153,7 @@ uint128_t deleglise_rivat128::A()
     cudaDeviceSynchronize();
   }
 
-  uint128_t sum2 = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks) - sum;
+  uint128_t sum2 = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
   std::cout << "Hi PQ:\t" << sum2 << std::endl;
 
   timer.stop();
@@ -175,10 +181,10 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
   s_pi_chi[threadIdx.x] = 0;
   __shared__ uint64_t s_lastQ[numThreads];
 
-  for(uint64_t j = 0; j < pMaxIdx - 1; j += 256){
+  for(uint64_t j = 0; j < pMaxIdx - 1; j += numThreads){
     s_lastQ[threadIdx.x] = (uint64_t)-1;
     __syncthreads();
-    for(uint64_t i = j; i < min((uint32_t)pMaxIdx, (uint32_t)j + 256); i++){
+    for(uint64_t i = j; i < min((uint32_t)pMaxIdx, (uint32_t)j + numThreads); i++){
 
       uint64_t qidx = nextQ[i] + tidx;
       if(qidx >= maxQidx) {atomicCAS((unsigned long long *)&s_lastQ[0], (unsigned long long)-1, (unsigned long long)maxQidx); break;}
@@ -218,7 +224,6 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
 
   uint64_t p, qidx, maxQ;
   if(tidx + pMinIdx > pMaxIdx) goto hiPQ_end;
-  // if(tidx < 24 || tidx >= 30) goto hiPQ_end;
   p = pq[tidx + pMinIdx];
   qidx = max((unsigned long long)tidx + pMinIdx + 1, (unsigned long long)nextQ[tidx + pMinIdx]);
   maxQ = min(x / (p * base), _isqrt(x/p));
@@ -230,7 +235,7 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
     q = uint128_t::div128(x, (p * q));
 
     // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
-    s_pi_chi[threadIdx.x] += 1;//calculatePiChi(q, y, d_pitable, pi_0, base);
+    s_pi_chi[threadIdx.x] += calculatePiChi(q, y, d_pitable, pi_0, base);
 
     qidx++;
     q = pq[qidx];

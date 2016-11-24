@@ -67,7 +67,7 @@ uint128_t deleglise_rivat128::A_cpu()
     uint64_t base = pi_table.get_base() & (~1ull);
 
     #pragma omp parallel for schedule(dynamic) reduction(+:sum)
-    for(uint32_t i = 0; i < num_p; i++){
+    for(uint32_t i = 0; i < 16384; i++){
       uint64_t p = pq[i];
       uint64_t maxQ = std::sqrt(x/p);
 
@@ -106,7 +106,7 @@ uint128_t deleglise_rivat128::A_cpu()
     uint32_t pMaxIdx = upperBound(pq, 0, num_p, pMax);
 
     #pragma omp parallel for schedule(dynamic) reduction(+:sum)
-    for(uint32_t i = 0; i < num_p; i++){
+    for(uint32_t i = 0; i < 16384; i++){
       uint64_t p = pq[i];
       uint64_t maxQ = std::sqrt(x/p);
       // std::cout << i << " " << maxQ << std::endl;

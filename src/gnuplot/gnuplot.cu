@@ -70,13 +70,15 @@ void gnuplotOmega(uint64_t x, uint64_t y, uint16_t c)
   {
     Gnuplot gp;
     // calculate bounds
-    double x_dbl = uint128_t::u128_to_double(x);
-    double sqrtx = uint128_t::sqrt(x);
-    double qrtx = pow(x_dbl,0.25);
-    double x38 = pow(x_dbl, 0.375);
-    double cbrtx = std::cbrt(x_dbl);
+    float x_dbl = uint128_t::u128_to_float(x);
+    float sqrtx = uint128_t::sqrt(x);
+    float qrtx = pow(x_dbl,0.25);
+    float x38 = pow(x_dbl, 0.375);
+    float cbrtx = std::cbrt(x_dbl);
 
-    gp << "set terminal wxt size 1620, 1620\n";
+    std::cout << x_dbl << " " << cbrtx << std::endl;
+
+    gp << "set terminal wxt size 1920, 1920\n";
     gp << "set tics front\n";
     gp << "set grid nopolar\n";
     gp << "set samples 10000\n";
@@ -91,13 +93,11 @@ void gnuplotOmega(uint64_t x, uint64_t y, uint16_t c)
     gp << "x < " << qrtx << " ? 0 : sqrt(" << x_dbl << "/x) with filledcurve x1 title 'A' enhanced, ";
     gp << y << "/x with filledcurve x1 title 'not counted', ";
     gp << "x < " << cbrtx << " ? x : 0 with filledcurve x1 title 'not counted',";
-    //for(float a = std::sqrt(x_dbl); a > x38; a -= pow(2,30))
-    double a = sqrtx;
+    for(float a = std::sqrt(x_dbl); a > x38; a -= pow(2,34))
        gp << x_dbl/a << "/x with line lw 2 title 'pi_m_a_x = " << (uint64_t) a << "',";
-    //for(float a = x38; a > cbrtx; a -= pow(2,30))
-    a = x38;
+    for(float a = x38; a > cbrtx; a -= pow(2,34))
        gp << x_dbl/a << "/x with line lw 2 title 'pi_m_a_x = " << (uint64_t)a << "',";
-    gp << x_dbl/cbrtx << "/x with line lw 2 title 'pi_m_a_x = " << (uint64_t) cbrtx << "'\n";
+    gp << pow(x_dbl, 2.0/3.0) << "/x with line lw 2 title 'pi_m_a_x = " << (uint64_t) cbrtx << "'\n";
     gp << "pause -1\n";
 
    }

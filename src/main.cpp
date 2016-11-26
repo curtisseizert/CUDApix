@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
 
     if(y == 0){
       alpha = getAlpha(x);
-      y = uint128_t::sqrt(x);
+      y = _isqrt(x);
       y = pow(y, (double)2.0/3.0);
       y *= alpha;
     }
@@ -95,7 +95,7 @@ uint128_t calc(char * argv) // for getting values bigger than the 32 bits that s
   getline(&line, &len, in);
   std::string s = line;
 
-  value = uint128_t::stou128(s);
+  value = uint128_t::string_to_u128(s);
 
   return value;
 }
@@ -156,7 +156,7 @@ double getAlpha(uint64_t x)
 double getAlpha(uint128_t x)
 {
   double alpha;
-  double x2 = (double) uint128_t::sqrt(x);
+  double x2 = (double) _isqrt(x);
 
 // use default alpha if no command-line alpha provided
   if (x2 <= 31622776601)

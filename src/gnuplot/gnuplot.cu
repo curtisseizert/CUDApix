@@ -70,8 +70,8 @@ void gnuplotOmega(uint64_t x, uint64_t y, uint16_t c)
   {
     Gnuplot gp;
     // calculate bounds
-    float x_dbl = uint128_t::u128_to_float(x);
-    float sqrtx = uint128_t::sqrt(x);
+    float x_dbl = u128_to_float(x);
+    float sqrtx = _isqrt(x);
     float qrtx = pow(x_dbl,0.25);
     float x38 = pow(x_dbl, 0.375);
     float cbrtx = std::cbrt(x_dbl);

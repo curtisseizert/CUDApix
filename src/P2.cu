@@ -20,7 +20,7 @@ uint128_t P2(uint128_t x, uint64_t y)
     uint128_t total = 0;
 
     uint64_t top = x/y;
-    uint64_t sqrt_x = uint128_t::sqrt(x);
+    uint64_t sqrt_x = _isqrt(x);
 
     uint64_t gap = 0;
     bool run = 1;

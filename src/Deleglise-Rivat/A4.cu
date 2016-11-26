@@ -75,7 +75,7 @@ uint128_t deleglise_rivat128::A()
   // by underestimating the number of blocks we need
   uint64_t pMax = sqrt(x/pi_table.getNextBaseDown());
   uint32_t pMaxIdx = (uint32_t)upperBound(pq.h_primes, 0, num_p, pMax);
-  uint64_t qMax = uint128_t::mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
+  uint64_t qMax = mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
   uint32_t qMaxIdx = (uint32_t)upperBound(pq.h_primes, 0, pq.len, qMax);
   uint64_t qMinIdx = 0;
 
@@ -106,7 +106,7 @@ uint128_t deleglise_rivat128::A()
     qMinIdx = qMaxIdx;
     pMax = sqrt(x/pi_table.getNextBaseDown());
     pMaxIdx = upperBound(pq.h_primes, 0, num_p, pMax);
-    qMax = uint128_t::mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
+    qMax = mul128(sqrtx, qrtx) / pi_table.getNextBaseDown();
     qMaxIdx = upperBound(pq.h_primes, 0, pq.len, qMax);
     cudaDeviceSynchronize();
 
@@ -192,7 +192,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
       uint64_t p = pq[i];
 
       // calculate x/(p * q) and store value in q
-      q = uint128_t::div128(x, (p * q));
+      q = div128to64(x, (p * q));
 
       // check to make sure quotient is > pi_0, and coordinate this block's value
       // of lastQ if not
@@ -232,7 +232,7 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
     uint64_t q = pq[qidx];
     if(q > maxQ) break;
     // calculate x/(p * q) and store value in q
-    q = uint128_t::div128(x, (p * q));
+    q = div128to64(x, (p * q));
 
     // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
     s_pi_chi[threadIdx.x] += calculatePiChi(q, y, d_pitable, pi_0, base);

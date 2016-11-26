@@ -64,8 +64,8 @@ uint64_t S2_trivial(uint64_t x, uint64_t y)
 uint128_t S2_trivial(uint128_t x, uint64_t y) // due to fitting p^2 (p_max = cbrt(x)) in a uint64_t
                                               // this imposes a limit of 2^96 for x
 {
-  uint64_t lower_bound = uint128_t::sqrt(x/y);
-  uint64_t upper_bound = uint128_t::sqrt(x);
+  uint64_t lower_bound = _isqrt(x/y);
+  uint64_t upper_bound = _isqrt(x);
 
   std::cout << upper_bound << std::endl;
 

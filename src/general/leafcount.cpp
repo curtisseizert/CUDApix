@@ -58,7 +58,7 @@ uint64_t leafcount::gourdon_A(uint64_t x)
 
 uint128_t leafcount::gourdon_A(uint128_t x)
 {
-  uint64_t sqrtx = uint128_t::sqrt(x);
+  uint64_t sqrtx = _isqrt(x);
   uint64_t cbrtx = pow(sqrtx, (double)(2.0/3.0));
   uint64_t qrtx = sqrt(sqrtx);
   uint64_t x38 = qrtx * sqrt(qrtx);

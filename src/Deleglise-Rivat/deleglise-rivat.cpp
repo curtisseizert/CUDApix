@@ -95,7 +95,7 @@ deleglise_rivat128::deleglise_rivat128(uint128_t x, uint64_t y, uint16_t c)
 void deleglise_rivat128::calculateBounds()
 {
   z = x / y;
-  sqrtx = uint128_t::sqrt(x);
+  sqrtx = _isqrt(x);
   cbrtx = pow(sqrtx, 2.0/3.0);
   qrtx = sqrt(sqrtx);
   sqrtz = sqrt(z);

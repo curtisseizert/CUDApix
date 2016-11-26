@@ -117,7 +117,7 @@ int64_t deleglise_rivat64::sigma6() const
 
 uint128_t deleglise_rivat128::sigma1() const
 {
-  uint128_t s1 = uint128_t::mul128((pi_y - pi_cbrtx), (pi_y - pi_cbrtx - 1));
+  uint128_t s1 = mul128((pi_y - pi_cbrtx), (pi_y - pi_cbrtx - 1));
   s1 >>= 1;
 
   return s1;
@@ -126,7 +126,7 @@ uint128_t deleglise_rivat128::sigma1() const
 uint128_t deleglise_rivat128::sigma2() const // returns -sigma2
 {
   uint64_t s2 = -((pi_qrtx * (pi_qrtx - 3)) >> 1) + ((pi_sqrtz * (pi_sqrtz - 3)) >> 1);
-  uint128_t prod = uint128_t::mul128(s2,pi_y);
+  uint128_t prod = mul128(s2,pi_y);
   // prod >>= 1;
 
   return prod;
@@ -135,7 +135,7 @@ uint128_t deleglise_rivat128::sigma2() const // returns -sigma2
 uint128_t deleglise_rivat128::sigma3() const
 {
   uint64_t s3 = pi_cbrtx;
-  uint128_t s3_ = uint128_t::mul128(s3,(uint64_t)(s3 - 1) * (2 * s3 - 1) / 6);
+  uint128_t s3_ = mul128(s3,(uint64_t)(s3 - 1) * (2 * s3 - 1) / 6);
   s3_ -= pi_cbrtx;
   s3_ -= pi_qrtx * (pi_qrtx - 1) * (2 * pi_qrtx - 1) / 6;
   s3_ += pi_qrtx;
@@ -159,7 +159,7 @@ uint128_t deleglise_rivat128::sigma4() const
 
   s4 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
 
-  s4 = uint128_t::mul128(s4, pi_y);
+  s4 = mul128(s4, pi_y);
 
   return s4;
 }

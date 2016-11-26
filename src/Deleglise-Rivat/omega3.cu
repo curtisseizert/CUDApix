@@ -138,7 +138,7 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
         uint64_t p = pq[i];
 
         // calculate x/(p * q) and store value in q
-        q = uint128_t::div128(x, (p * q));
+        q = div128to64(x, (p * q));
 
         // check to make sure quotient is > pi_0, and coordinate this block's value
         // of lastQ if not
@@ -163,7 +163,7 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
         uint64_t p = pq[i];
 
         // calculate x/(p * q) and store value in q
-        q = uint128_t::div128(x, (p * q));
+        q = div128to64(x, (p * q));
 
         // check to make sure quotient is > pi_0, and coordinate this block's value
         // of lastQ if not

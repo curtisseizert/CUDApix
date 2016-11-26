@@ -57,6 +57,7 @@ _OBJS =\
  Deleglise-Rivat/A4_cpu.o \
  Deleglise-Rivat/S2.o \
  Deleglise-Rivat/S3.o \
+ Deleglise-Rivat/omega3.o \
  Deleglise-Rivat/sigma.o \
  gnuplot/gnuplot.o
 OBJS = $(patsubst %,$(OBJ_DIR)/%,$(_OBJS))

@@ -46,6 +46,8 @@ private:
   uint128_t A();
   uint128_t A_cpu();
 
+  uint128_t omega3();
+
   void calculateBounds();
   void calculatePiValues();
 

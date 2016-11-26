@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
 
     // gnuplotA_Omega(x, y, c);
     uint128_t pi = deleglise_rivat128::pi_deleglise_rivat(x, y, c);
-    // pi = GourdonVariant64::piGourdon(x, y, c);
+    pi = GourdonVariant64::piGourdon(pow(10,19), y, c);
     std::cout << "pi = " << pi << std::endl;
 
 

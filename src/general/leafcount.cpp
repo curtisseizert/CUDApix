@@ -179,3 +179,22 @@ uint64_t leafcount::omega3(uint64_t x, uint64_t y)
   cudaDeviceReset();
   return sum;
 }
+
+uint64_t leafcount::omega3(uint128_t x, uint64_t y)
+{
+  uint64_t sum = 0;
+  PrimeArray pq(_isqrt(y) + 1, std::sqrt(_isqrt(x)));
+  PrimeArray pi(0, y);
+
+  pq.h_primes = CudaSieve::getHostPrimes(pq.bottom, pq.top, pq.len, 0);
+  pi.h_primes = CudaSieve::getHostPrimes(pi.bottom, pi.top, pi.len, 0);
+
+  #pragma omp parallel for
+  for(uint32_t i = 0; i < pq.len; i++){
+    uint64_t p = pq.h_primes[i];
+    sum += pi.len - upperBound(pi.h_primes, 0, pi.len, x/(p*p*p));
+  }
+
+  cudaDeviceReset();
+  return sum;
+}

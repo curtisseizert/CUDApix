@@ -72,11 +72,11 @@ uint128_t deleglise_rivat128::omega3()
     // to form the basis of a compare and swap operation in the kernel that evaluates
     // whether a given value has changed
     cudaMemcpyAsync(d_nextQ, d_lastQ, pi_qrtx * sizeof(uint64_t), cudaMemcpyDeviceToDevice, stream[1]);
-    uint64_t pMin = std::max(sqrty, _isqrt(pi_table.getNextBaseDown()));
-    uint32_t pMinIdx = lowerBound(pq.h_primes, pi_sqrty, pi_qrtx, pMin);
+    uint64_t pMin = std::max((uint64_t)pow(sqrtx, 0.3333333), _isqrt(pi_table.getNextBaseDown()));
     uint64_t pCorner = std::max(sqrty, _isqrt(pi_table.get_base()));
-    uint32_t pCornerIdx = upperBound(pq.h_primes, pi_sqrty, pi_qrtx, pCorner);
     uint64_t qMax = std::min(y, (x / (pMin * pMin * pMin)));
+    uint32_t pMinIdx = lowerBound(pq.h_primes, pi_sqrty, pi_qrtx, pMin);
+    uint32_t pCornerIdx = upperBound(pq.h_primes, pi_sqrty, pi_qrtx, pCorner);
     uint64_t qMaxIdx = upperBound(pq.h_primes, 0, pq.len, qMax);
 
     uint64_t blocks = (qMaxIdx - pi_qrtx) / threadsPerBlock + 1;
@@ -85,6 +85,7 @@ uint128_t deleglise_rivat128::omega3()
     uint64_t pi_max = pi_table.get_pi_base();
     uint32_t * d_piTable = pi_table.getNextDown();
     std::cout << "Base: " << pi_table.get_base() << "\t\tBlocks: " << blocks << std::endl;
+    std::cout << "pMinIdx : " << pMinIdx << " qMax : " << qMax <<" qMaxIdx : " << qMaxIdx << std::endl;
     // launch kernel
     cudaDeviceSynchronize();
     cudaProfilerStart();
@@ -146,8 +147,8 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
 
         // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
         if(q != 0){
-          s_pi[threadIdx.x] += lookupPi(q, d_pitable, pi_0, base) + 2;
-          s_pi[threadIdx.x] -= i;
+          s_pi[threadIdx.x] += 1;//lookupPi(q, d_pitable, pi_0, base) + 2;
+          // s_pi[threadIdx.x] -= i;
         }
       }
     } // repeat for all p values in range
@@ -171,8 +172,8 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
 
         // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
         if(q != 0){
-          s_pi[threadIdx.x] += lookupPi(q, d_pitable, pi_0, base) + 2;
-          s_pi[threadIdx.x] -= i;
+          s_pi[threadIdx.x] += 1;//lookupPi(q, d_pitable, pi_0, base) + 2;
+          // s_pi[threadIdx.x] -= i;
         }else{
           break;
           // q = 1;

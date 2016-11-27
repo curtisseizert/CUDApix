@@ -9,5 +9,7 @@ uint64_t gourdon_C_simple(uint64_t x, uint64_t y);
 uint64_t omega1(uint64_t x, uint64_t y, uint16_t c);
 uint64_t omega2(uint64_t x, uint64_t y);
 uint64_t omega3(uint64_t x, uint64_t y);
+uint64_t omega3(uint128_t x, uint64_t y);
+
 
 } // namespace leafcount

@@ -49,13 +49,10 @@ void dispDevicePartialSums(T * d_a, U numElements, U dimx)
 template<typename T, typename U, typename V, typename W>
 T lowerBound(T * a, U lo, V hi, W value)
 {
-  uint32_t steps = 0;
-
   do{
     T mid = (lo + hi) / 2;
     if(a[mid] < value) lo = mid;
     if(a[mid] >= value) hi = mid;
-    steps++;
   }while(lo + 1 < hi);
   return lo;
 }
@@ -63,13 +60,10 @@ T lowerBound(T * a, U lo, V hi, W value)
 template<typename T, typename U, typename V, typename W>
 T upperBound(T * a, U lo, V hi, W value)
 {
-  uint32_t steps = 0;
-
   do{
     T mid = (lo + hi) / 2;
     if(a[mid] <= value) lo = mid;
     if(a[mid] > value) hi = mid;
-    steps++;
   }while(lo + 1 < hi);
   return hi;
 }

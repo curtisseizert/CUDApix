@@ -46,39 +46,5 @@ public:
   __device__ __host__ x_Over_y(uint64_t x): x(x){}
   __device__ __host__ uint64_t operator() (uint64_t y) { return x / y;}
 };
-//
-// __host__ __device__ static inline int64_t clzll(uint64_t x)
-// {
-//   uint64_t res;
-// #ifdef __CUDA_ARCH__
-//   res = __clzll(x);
-// #else
-//   asm("lzcnt %1, %0" : "=l" (res) : "l" (x));
-// #endif
-//   return res;
-// }
-
-__host__ __device__ inline uint64_t _isqrt(uint64_t x)
-{
-  uint64_t res0 = 0, res1 = 0;
-#ifdef __CUDA_ARCH__
-  res0 = sqrtf(x);
-  while(res0 != res1){
-    res1 = (res0 + x/res0) >> 1;
-    res0 = (res1 + x/res1) >> 1;
-    res1 = (res0 + x/res0) >> 1;
-    res0 = (res1 + x/res1) >> 1;
-  }
-#else
-  res0 = sqrt(x);
-  while(res0 != res1){
-    res1 = (res0 + x/res0) >> 1;
-    res0 = (res1 + x/res1) >> 1;
-    res1 = (res0 + x/res0) >> 1;
-    res0 = (res1 + x/res1) >> 1;
-  }
-#endif
-  return res0;
-}
 
 #endif

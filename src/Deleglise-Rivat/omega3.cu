@@ -67,7 +67,7 @@ uint128_t deleglise_rivat128::omega3()
   cudaFuncSetCacheConfig(Omega3_kernel, cudaFuncCachePreferL1);
 
   // find all (p,q) pairs such that x/(p * q) >= x^(3/8)
-  while(pi_table.get_base() > pq.top){
+  while(pi_table.get_base() > 0){
     // nextQ is copied from lastQ each iteration rather than switching pointers
     // to form the basis of a compare and swap operation in the kernel that evaluates
     // whether a given value has changed
@@ -75,6 +75,7 @@ uint128_t deleglise_rivat128::omega3()
     uint64_t pMin = std::max((uint64_t)pow(sqrtx, 0.3333333), _isqrt(pi_table.getNextBaseDown()));
     uint64_t pCorner = std::max(sqrty, _isqrt(pi_table.get_base()));
     uint64_t qMax = std::min(y, (x / (pMin * pMin * pMin)));
+    pMin = std::max(sqrty + 1, pMin);
     uint32_t pMinIdx = lowerBound(pq.h_primes, pi_sqrty, pi_qrtx, pMin);
     uint32_t pCornerIdx = upperBound(pq.h_primes, pi_sqrty, pi_qrtx, pCorner);
     uint64_t qMaxIdx = upperBound(pq.h_primes, 0, pq.len, qMax);
@@ -85,7 +86,7 @@ uint128_t deleglise_rivat128::omega3()
     uint64_t pi_max = pi_table.get_pi_base();
     uint32_t * d_piTable = pi_table.getNextDown();
     std::cout << "Base: " << pi_table.get_base() << "\t\tBlocks: " << blocks << std::endl;
-    std::cout << "pMinIdx : " << pMinIdx << " qMax : " << qMax <<" qMaxIdx : " << qMaxIdx << std::endl;
+    std::cout << "pMinIdx : " << pMinIdx << " pCornerIdx : " << pCornerIdx << " pMaxIdx : " << pi_qrtx << std::endl;
     // launch kernel
     cudaDeviceSynchronize();
     cudaProfilerStart();
@@ -98,7 +99,7 @@ uint128_t deleglise_rivat128::omega3()
   }
 
   sum = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
-  std::cout << "Omega 3:\t" << sum << std::endl;
+  // std::cout << "Omega 3:\t" << sum << std::endl;
 
   timer.stop();
   timer.displayTime();
@@ -128,7 +129,8 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
   for(uint64_t j = pMinIdx; j < pMaxIdx - 1; j += numThreads){
     s_lastQ[threadIdx.x] = (uint64_t)-1;
     __syncthreads();
-    for(uint64_t i = j; i < min((uint32_t)pCornerIdx, (uint32_t)j + numThreads); i++){
+    uint64_t i = j;
+    for(; i < min((uint32_t)pCornerIdx, (uint32_t)j + numThreads); i++){
 
       uint64_t qidx = nextQ[i] + tidx;
       // if(tidx == 0) printf("%llu\t%llu\n", qidx, i);
@@ -153,7 +155,7 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
       }
     } // repeat for all p values in range
 
-    for(uint64_t i = j; i < min((uint32_t)pMaxIdx, (uint32_t)j + numThreads); i++){
+    for(; i < min((uint32_t)pMaxIdx, (uint32_t)j + numThreads); i++){
 
       uint64_t qidx = nextQ[i] + tidx;
       // if(tidx == 0) printf("%llu\t%llu\n", qidx, i);
@@ -176,7 +178,6 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
           // s_pi[threadIdx.x] -= i;
         }else{
           break;
-          // q = 1;
         }
       }
     } // repeat for all p values in range
@@ -197,8 +198,9 @@ inline uint64_t checkRange(uint64_t q, uint64_t base, uint64_t & s_lastQ, uint64
   if(q + 1 < base){
     atomicMin((unsigned long long *)&s_lastQ, (unsigned long long)qidx);
     q = 0;
-  } else if(q - base > 1u << 30)
-    q = 0;
+  }
+  // else if(q - base > 1u << 30)
+  //   q = 0;
   return q;
 }
 
@@ -220,7 +222,7 @@ __device__
 inline void minLastQ(uint32_t j, uint64_t * s_lastQ, uint64_t * nextQ, uint64_t * lastQ)
 {
   uint32_t i = j + threadIdx.x;
-  if(s_lastQ[threadIdx.x] != ~0){
+  if(s_lastQ[threadIdx.x] != (uint64_t)-1){
     atomicCAS((unsigned long long *)&lastQ[i], (unsigned long long)nextQ[i], (unsigned long long)s_lastQ[threadIdx.x]);
     atomicMin((unsigned long long *)&lastQ[i], (unsigned long long)s_lastQ[threadIdx.x]);
   }
@@ -235,5 +237,5 @@ void Omega3_lower_bound(uint128_t x, uint64_t * nextQ, uint64_t * pq,
   uint64_t p = pq[pidx];
 
   if(pidx <= pMaxIdx)
-    nextQ[pidx] = x / (p * p * p);
+    nextQ[pidx] = div128to64(x, p*p*p)+1; // this is going to overflow at ~x = 2^85
 }

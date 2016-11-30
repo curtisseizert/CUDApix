@@ -96,9 +96,9 @@ void deleglise_rivat128::calculateBounds()
 {
   z = x / y;
   sqrtx = _isqrt(x);
-  cbrtx = pow(sqrtx, 2.0/3.0);
-  qrtx = sqrt(sqrtx);
-  sqrtz = sqrt(z);
+  cbrtx = _icbrt(x);
+  qrtx = _iqrt(x);
+  sqrtz = _isqrt(z);
 }
 
 void deleglise_rivat128::calculatePiValues()

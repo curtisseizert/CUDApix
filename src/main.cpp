@@ -71,7 +71,7 @@ int main(int argc, char ** argv)
     // pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
     // std::cout << "pi = " << pi << std::endl;
 
-    gnuplotA_Omega(x, y, c);
+    // gnuplotA_Omega(x, y, c);
     uint128_t pi = deleglise_rivat128::pi_deleglise_rivat(x, y, c);
     // pi = GourdonVariant64::piGourdon(pow(10,19), y, c);
     uint64_t leaf = leafcount::omega3(x, y);

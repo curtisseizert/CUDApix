@@ -58,7 +58,7 @@ uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
   c--;
   uint16_t threadsPerBlock = 256;
   uint128_t sum = 0;
-  int64_t * d_quot = NULL;
+  uint128_t * d_quot = NULL;
   uint64_t * d_lpf;
   int8_t * d_mu;
   uint32_t * d_phi;
@@ -70,8 +70,8 @@ uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
 
   d_phi = phi->getCountDevice();
 
-  cudaMalloc(&d_quot, blocks*threadsPerBlock * sizeof(int64_t));
-  cudaMemset(d_quot, blocks*threadsPerBlock * sizeof(int64_t), 0);
+  cudaMalloc(&d_quot, blocks*threadsPerBlock * sizeof(uint128_t));
+  cudaMemset(d_quot, blocks*threadsPerBlock * sizeof(uint128_t), 0);
 
   for(uint64_t i = 0; i < y; i += 2 * threadsPerBlock * blocks){
     d_mu = gen_d_mu(i, i + (2 * threadsPerBlock * blocks));
@@ -110,18 +110,20 @@ __global__ void ordinaryKernel(int8_t * d_mu, int64_t * d_quot, uint32_t * d_lpf
 }
 
 // 128 bit -- in progress
-__global__ void ordinaryKernelIter(int8_t * d_mu, int64_t * d_quot, uint64_t * d_lpf, uint32_t * d_phi, uint128_t x, uint64_t y, uint16_t c, uint64_t i)
+__global__ void ordinaryKernelIter(int8_t * d_mu, uint128_t * d_quot, uint64_t * d_lpf, uint32_t * d_phi, uint128_t x, uint64_t y, uint16_t c, uint64_t i)
 {
   uint64_t tidx = threadIdx.x + blockIdx.x * blockDim.x;
   uint64_t n = 2 * tidx + 1 + i;
   if(n <= y){
-    d_quot[tidx] = 0;
     if(d_lpf[tidx] > d_small[c]){
-      uint64_t m = (x / n);
-      uint64_t phi = m / d_wheel[c];
+      uint128_t m = div128to128(x,n);
+      uint128_t phi = div128to128(mn d_wheel[c]);
       phi *= d_totient[c];
       phi += d_phi[((1+m%d_wheel[c]))/2];
-      d_quot[tidx] = d_mu[tidx] * phi;
+      if(d_mu[tidx] == 1)
+      	d_quot[tidx] += phi;
+      if(d_mu[tidx == -1])
+      	d_quot[tidx] -= phi;
     }
   }
 }

@@ -110,6 +110,11 @@ void deleglise_rivat128::calculatePiValues()
   pi_sqrtz = CudaSieve::countPrimes(0ull, sqrtz);
 }
 
+uint128_t deleglise_rivat128::omega12()
+{
+	return Omega12Host::omega12(x, y, c);
+}
+
 uint128_t deleglise_rivat128::pi_deleglise_rivat(uint128_t x, uint64_t y, uint16_t c)
 {
   deleglise_rivat128 pi_dr(x, y, c);

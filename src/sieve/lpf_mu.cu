@@ -98,7 +98,7 @@ __device__ void atomicMult(int32_t * addr, int32_t val)
 
 __device__ void atomicMult(int64_t * addr, int64_t val)
 {
-  int old = *addr, assumed;
+  int64_t old = *addr, assumed;
 
   do{
     assumed = old;

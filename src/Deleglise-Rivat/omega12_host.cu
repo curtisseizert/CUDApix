@@ -47,17 +47,17 @@ Omega12Host::~Omega12Host()
 
 void Omega12Host::makeData(uint128_t x, uint64_t y, uint16_t c)
 {
-  cudaMallocManaged((void **)&data, sizeof(S2data_64));
+  cudaMallocManaged((void **)&data, sizeof(omega12data_128));
   cudaDeviceSynchronize();
   h_cdata.x = x;
   h_cdata.y = y;
-  h_cdata.sqrty = sqrt(y);
-  h_cdata.z = x/y;
+  h_cdata.sqrty = _isqrt(y);
+  h_cdata.z = div128to64(x,y);
   h_cdata.c = c;
   h_cdata.sieveWords = sieveWords_;
   h_cdata.bstart = 0;
   h_cdata.mstart = 1;
-  h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512u); // must be <= 1024
+  h_cdata.blocks = std::min(1 + (uint64_t)(h_cdata.z/(64 * h_cdata.sieveWords)), 512ul); // must be <= 1024
 
   h_cdata.maxPrime = maxPrime_;
   data->d_primeList = CudaSieve::getDevicePrimes32(0, h_cdata.maxPrime, h_cdata.primeListLength, 0);
@@ -74,7 +74,7 @@ void Omega12Host::setupNextIter()
 {
   // if(h_cdata.sieveWords < 4096) h_cdata.sieveWords += 1024;
   h_cdata.bstart += h_cdata.blocks * (64 * h_cdata.sieveWords);
-  h_cdata.blocks = std::min(1 + (uint32_t)(h_cdata.z - h_cdata.bstart)/(64 * h_cdata.sieveWords), 512u);
+  h_cdata.blocks = std::min(1 + (uint64_t)(h_cdata.z - h_cdata.bstart)/(64 * h_cdata.sieveWords), 512ul);
 
   transferConstants();
   zero();
@@ -111,12 +111,12 @@ void Omega12Host::deallocate()
   cudaFree(data->d_totalsNext);
 }
 
-int64_t Omega12Host::launchIter()
+uint128_t	 Omega12Host::launchIter()
 {
   uint128_t omega12_res = 0;
 
   cudaProfilerStart();
-  Omega12Global::S2ctl<<<h_cdata.blocks, h_threadsPerBlock, h_cdata.sieveWords*sizeof(uint32_t)>>>(data);//, bstart, h_cdata.sieveWords);
+  Omega12Global::omega12_ctl<<<h_cdata.blocks, h_threadsPerBlock, h_cdata.sieveWords*sizeof(uint32_t)>>>(data);//, bstart, h_cdata.sieveWords);
   cudaProfilerStop();
   cudaDeviceSynchronize();
 
@@ -137,7 +137,7 @@ int64_t Omega12Host::launchIter()
   // std::cout << std::flush;
   //
 
-  return omega12_;
+  return omega12_res;
 }
 
 uint128_t Omega12Host::omega12(uint128_t x, uint64_t y, uint16_t c)

@@ -1,10 +1,10 @@
 # Location of the CUDA toolkit
-CUDA_DIR = /opt/cuda
+CUDA_DIR = /usr/local/cuda-8.0
 # Compute capability of the target GPU
 GPU_ARCH = sm_61
 # Compilers to use
-CUDASIEVE_DIR = /home/curtis/CUDASieve
-UINT128_DIR = /home/curtis/CUDA-uint128
+CUDASIEVE_DIR = /home/curtis/Projects/CUDASieve
+UINT128_DIR = /home/curtis/Projects/CUDA-uint128
 NVCC = $(CUDA_DIR)/bin/nvcc
 CC = g++
 # Flags for the host compiler passed from nvcc
@@ -12,7 +12,7 @@ CCFLAGS = -O0 -std=c++11 -g -fopenmp
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
-NVCC_FLAGS = -ccbin /bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo -Xcompiler -fopenmp
+NVCC_FLAGS = -ccbin /usr/bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo -Xcompiler -fopenmp
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills -g -lineinfo
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR) -I ./

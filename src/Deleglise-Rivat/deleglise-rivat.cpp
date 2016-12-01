@@ -5,6 +5,7 @@
 #include <cuda_uint128.h>
 
 #include "Deleglise-Rivat/deleglise-rivat.hpp"
+#include "Deleglise-Rivat/omega12.cuh"
 #include "P2.cuh"
 #include "trivial.cuh"
 #include "ordinary.cuh"

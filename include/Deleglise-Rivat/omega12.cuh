@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <cuda.h>
+#include <cuda_uint128.h>
 
 #ifndef _OMEGA12
 #define _OMEGA12
@@ -12,12 +13,12 @@ struct cdata128{
   uint16_t c, sieveWords;
 };
 
-__constant__ c_data128 cdata;
+__constant__ cdata128 cdata;
 
 struct omega12data_128{
   int64_t * d_sums, * d_partialsums;
-  uint64_t * d_totals, * d_totalsNext;
-  uint32_t * d_primeList, * d_lpf, * d_bitsieve;
+  uint64_t * d_totals, * d_lpf, * d_totalsNext;
+  uint32_t * d_primeList, * d_bitsieve;
   int16_t * d_num;
   int8_t * d_mu;
 };
@@ -43,8 +44,8 @@ namespace omega12{
   __device__ uint32_t getCount(uint32_t * s_sieve);
   __device__ void updatePrimeCache(uint32_t * d_primeList, uint32_t * s_primeCache, uint32_t first, uint32_t primeListLength);
   __device__ uint64_t exclusiveScan(int64_t * array);
-  __device__ void computeMuPhi(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, S2data_64 * data, nRange & nr); // want to -= this quantity
-  __device__ void computeMuPhiSparse(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, S2data_64 * data, nRange & nr); // want to -= this quantity
+  __device__ void computeMuPhi(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, cdata128 * data, nRange & nr); // want to -= this quantity
+  __device__ void computeMuPhiSparse(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, cdata128 * data, nRange & nr); // want to -= this quantity
   __device__ uint32_t countUpSieve(uint32_t * s_sieve, uint16_t firstBit, uint16_t lastBit, uint16_t threadFirstWord);
 
   template <typename T>
@@ -58,8 +59,8 @@ namespace omega12{
 
 }
 
-namespace Omega12global{
-  __global__ void S2ctl(S2data_64 * data);
+namespace Omega12Global{
+  __global__ void omega12_ctl(omega12data_128 * data);
   __global__ void scanVectorized(int64_t * a, uint64_t * overflow);
   __global__ void addMultiply(int64_t * a, uint64_t * b, int16_t * c); // a = (a + b) * c
   __global__ void multiply(uint32_t * a, int8_t * b, int32_t * c, uint32_t numElements);
@@ -91,10 +92,10 @@ public:
   void zero();
   void transferConstants();
 
-  int64_t launchIter();
+  uint128_t launchIter();
 
 
-  static uint64_t omega12(uint128_t x, uint64_t y, uint16_t c);
+  static uint128_t omega12(uint128_t x, uint64_t y, uint16_t c);
 };
 
 #endif

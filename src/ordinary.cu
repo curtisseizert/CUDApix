@@ -85,7 +85,7 @@ uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
     cudaFree(d_lpf);
   }
 
-  sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
+  //sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
   cudaFree(d_quot);
 
   delete phi;
@@ -117,12 +117,12 @@ __global__ void ordinaryKernelIter(int8_t * d_mu, uint128_t * d_quot, uint64_t *
   if(n <= y){
     if(d_lpf[tidx] > d_small[c]){
       uint128_t m = div128to128(x,n);
-      uint128_t phi = div128to128(mn d_wheel[c]);
-      phi *= d_totient[c];
-      phi += d_phi[((1+m%d_wheel[c]))/2];
+      uint128_t phi = div128to128(m, d_wheel[c]);
+      phi = mul128(phi,(uint64_t)d_totient[c]);
+      phi += (uint64_t)d_phi[((1+m%d_wheel[c]))/2];
       if(d_mu[tidx] == 1)
       	d_quot[tidx] += phi;
-      if(d_mu[tidx == -1])
+      if(d_mu[tidx] == -1)
       	d_quot[tidx] -= phi;
     }
   }

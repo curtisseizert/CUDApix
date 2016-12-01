@@ -2,6 +2,7 @@
 #include <math_functions.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <cuda_uint128.h>
 
 #include "sieve/phisieve_constants.cuh"
 #include "Deleglise-Rivat/omega12.cuh"
@@ -11,23 +12,23 @@ __constant__ const uint16_t threadsPerBlock = 256;
 __device__
 void mRange::update(uint32_t p, const nRange & n)
 {
-  lo = cdata128.x / (n.hi * p);
-  lo = lo < cdata128.y/p ? cdata128.y/p : lo;
-  lo = lo > cdata128.y ? cdata128.y : lo;
-  hi = cdata128.x / ((n.lo + 1) * p);
-  hi = hi < cdata128.y/p ? cdata128.y/p : hi;
-  hi = hi > cdata128.y ? cdata128.y : hi;
+  lo = cdata.x / (n.hi * p);
+  lo = lo < cdata.y/p ? cdata.y/p : lo;
+  lo = lo > cdata.y ? cdata.y : lo;
+  hi = cdata.x / ((n.lo + 1) * p);
+  hi = hi < cdata.y/p ? cdata.y/p : hi;
+  hi = hi > cdata.y ? cdata.y : hi;
 }
 
 __device__
 void mRange::update_hi(uint32_t p, const nRange & n)
 {
-  uint64_t ub = min(cdata128.x / (p * p * p), cdata128.y);
+  uint64_t ub = min(div128to64(cdata.x, (p * p * p)), cdata.y);
 
-  lo = cdata128.x / (n.hi * p);
+  lo = cdata.x / (n.hi * p);
   lo = lo <= p ? p + 2 : lo;
   lo = lo > ub ? ub : lo;
-  hi = cdata128.x / ((n.lo + 1) * p);
+  hi = cdata.x / ((n.lo + 1) * p);
   hi = hi <= p ? p + 2 : hi;
   hi = hi > ub ? ub : hi;
 }
@@ -35,19 +36,19 @@ void mRange::update_hi(uint32_t p, const nRange & n)
 __device__
 nRange::nRange(uint64_t bstart)
 {
-  bitRange = 32 * cdata128.sieveWords / threadsPerBlock;
-  tfw = threadIdx.x * cdata128.sieveWords / threadsPerBlock;
-  lo = bstart + 64 * threadIdx.x * (cdata128.sieveWords / threadsPerBlock);
-  hi = bstart + 64 * (threadIdx.x + 1) * (cdata128.sieveWords / threadsPerBlock);
+  bitRange = 32 * cdata.sieveWords / threadsPerBlock;
+  tfw = threadIdx.x * cdata.sieveWords / threadsPerBlock;
+  lo = bstart + 64 * threadIdx.x * (cdata.sieveWords / threadsPerBlock);
+  hi = bstart + 64 * (threadIdx.x + 1) * (cdata.sieveWords / threadsPerBlock);
 }
 
 __device__
 void omega12::sieveInit(uint32_t * s_sieve, uint64_t bstart)
 {
-  for(uint32_t i = threadIdx.x; i < cdata128.sieveWords; i += blockDim.x){
+  for(uint32_t i = threadIdx.x; i < cdata.sieveWords; i += blockDim.x){
     uint64_t j = bstart/64 + i;
     uint32_t s = d_bitmask[0][j % d_smallPrimes[0]];
-    for(uint16_t a = 1; a < cdata128.c - 1; a++)
+    for(uint16_t a = 1; a < cdata.c - 1; a++)
       s |= d_bitmask[a][j % d_smallPrimes[a]];
     s_sieve[i] = s;
   }
@@ -56,7 +57,7 @@ void omega12::sieveInit(uint32_t * s_sieve, uint64_t bstart)
 __device__
 void omega12::markSmallPrimes(uint32_t * s_sieve, uint64_t bstart, uint16_t a)
 {
-  for(uint32_t i = threadIdx.x; i < cdata128.sieveWords; i += blockDim.x){
+  for(uint32_t i = threadIdx.x; i < cdata.sieveWords; i += blockDim.x){
     uint64_t j = bstart/64 + i;
     s_sieve[i] |= d_bitmask[a - 1][j % d_smallPrimes[a - 1]];
   }
@@ -91,7 +92,7 @@ void omega12::markLargePrimes(uint32_t * s_sieve, nRange & nr, uint32_t p,
 __device__
 uint32_t omega12::getCount(uint32_t * s_sieve)
 {
-  uint32_t c = 0, threadWords = cdata128.sieveWords/blockDim.x;
+  uint32_t c = 0, threadWords = cdata.sieveWords/blockDim.x;
   uint16_t start = threadIdx.x * threadWords;
 
   for(uint16_t i = start; i < start+threadWords; i++){
@@ -198,7 +199,7 @@ __device__ uint32_t omega12::countUpSieve(uint32_t * s_sieve, uint16_t firstBit,
 
 __device__
 void omega12::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num,
-                          int32_t * s_sums, uint32_t p, S2data_64 * data, nRange & nr)
+                          int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange & nr)
 {
   int32_t muPhi = 0;
   uint32_t phi = s_count[threadIdx.x];
@@ -210,11 +211,11 @@ void omega12::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_
 // as m decreases x/(m * p) increases, so decrementing m allows us to
 // count up through the sieve to get the appropriate value of phi
 
-  bool wouldMiss = (cdata128.x /( mr.hi * p) <= nr.hi) && (cdata128.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata128.y / p);
+  bool wouldMiss = (cdata.x /( mr.hi * p) <= nr.hi) && (cdata.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata.y / p);
   for(uint64_t m = mr.hi - (1 - mr.hi & 1ull); m > mr.lo - wouldMiss; m -= 2){
-    if(data->d_lpf[((m - cdata128.mstart) >> 1)] > p){
-      int8_t mu = data->d_mu[(m - cdata128.mstart) >> 1];
-      uint64_t n = cdata128.x / (m * p);
+    if(data->d_lpf[((m - cdata.mstart) >> 1)] > p){
+      int8_t mu = data->d_mu[(m - cdata.mstart) >> 1];
+      uint64_t n = cdata.x / (m * p);
       if(mu != 0 && n <= nr.hi){
         phi += omega12::countUpSieve(s_sieve, currentBit, (1 + n - nr.lo) >> 1, nr.tfw);
         currentBit = (1 + n - nr.lo) >> 1;
@@ -229,7 +230,7 @@ void omega12::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_
 __device__
 void omega12::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
                                 int16_t * s_num, int32_t * s_sums, uint32_t p,
-                                S2data_64 * data, nRange & nr)
+                                omega12data_128 * data, nRange & nr)
 {
   int32_t muPhi = 0;
   uint32_t phi = s_count[threadIdx.x];
@@ -241,11 +242,11 @@ void omega12::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
 // as m decreases x/(m * p) increases, so decrementing m allows us to
 // count up through the sieve to get the appropriate value of phi
 
-  bool wouldMiss = (cdata128.x /( mr.hi * p) <= nr.hi) && (cdata128.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata128.y / p);
+  bool wouldMiss = (cdata.x /( mr.hi * p) <= nr.hi) && (cdata.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata.y / p);
   for(uint64_t m = mr.hi - (1 - mr.hi & 1ull); m > mr.lo - wouldMiss; m -= 2){
     uint32_t s = data->d_bitsieve[m/64];
     if((1u & ~(s >> ((m % 64)/2))) == 1u){
-      uint64_t n = cdata128.x / (m * p);
+      uint64_t n = cdata.x / (m * p);
       if(n <= nr.hi){
         phi += omega12::countUpSieve(s_sieve, currentBit, (1 + n - nr.lo) >> 1, nr.tfw);
         currentBit = (1 + n - nr.lo) >> 1;
@@ -258,9 +259,9 @@ void omega12::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
   s_sums[threadIdx.x] -= muPhi;
 }
 
-__global__ void omega12global::omega12_ctl(S2data_64 * data)
+__global__ void Omega12Global::omega12_ctl(S2data_64 * data)
 {
-  // uint64_t bstart = cdata128.bstart + cdata128.sieveWords * 64 * blockIdx.x;
+  // uint64_t bstart = cdata.bstart + cdata.sieveWords * 64 * blockIdx.x;
   // __shared__ uint32_t s_primeCache[threadsPerBlock]; // this is because many threads
                                                      // will be reading the same prime
                                                      // simultaneously
@@ -275,71 +276,71 @@ __global__ void omega12global::omega12_ctl(S2data_64 * data)
   omega12::zero(s_num, threadsPerBlock);
   __syncthreads();
 
-  nRange nr(cdata128.bstart + cdata128.sieveWords * 64 * blockIdx.x);
+  nRange nr(cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
 
-  uint32_t pi_p = cdata128.c - 1;
+  uint32_t pi_p = cdata.c - 1;
   uint32_t p = d_smallPrimes[pi_p];
 
-  omega12::sieveInit(s_sieve, cdata128.bstart + cdata128.sieveWords * 64 * blockIdx.x);
+  omega12::sieveInit(s_sieve, cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
   __syncthreads();
   uint32_t threadCount = omega12::getCount(s_sieve);
   __syncthreads();
-  omega12::exclusiveScan(threadCount, s_count, data->d_sums[pi_p * cdata128.blocks + blockIdx.x]);
+  omega12::exclusiveScan(threadCount, s_count, data->d_sums[pi_p * cdata.blocks + blockIdx.x]);
   __syncthreads();
   omega12::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
   __syncthreads();
 
-  data->d_num[pi_p * cdata128.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
+  data->d_num[pi_p * cdata.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
   __syncthreads();
 
   while(pi_p < cutoff){
     pi_p++;
-    omega12::markSmallPrimes(s_sieve, cdata128.bstart + cdata128.sieveWords * 64 * blockIdx.x, pi_p);
+    omega12::markSmallPrimes(s_sieve, cdata.bstart + cdata.sieveWords * 64 * blockIdx.x, pi_p);
     __syncthreads();
     threadCount = omega12::getCount(s_sieve);
      __syncthreads();
-    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata128.blocks + blockIdx.x]);
+    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
     __syncthreads();
     p = d_smallPrimes[pi_p];
     omega12::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata128.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
     __syncthreads();
   }
 
-  while(pi_p < cdata128.primeListLength - 3){
+  while(pi_p < cdata.primeListLength - 3){
 
     pi_p++;
     omega12::markMedPrimes(s_sieve, nr, p, threadCount);
     __syncthreads();
 
-    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata128.blocks + blockIdx.x]);
+    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
-    if(p > cdata128.sqrty) goto Sparse;
+    if(p > cdata.sqrty) goto Sparse;
 
     omega12::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata128.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
     __syncthreads();
   }
 
-  while(pi_p < cdata128.primeListLength - 3){
+  while(pi_p < cdata.primeListLength - 3){
 
     pi_p++;
     omega12::markMedPrimes(s_sieve, nr, p, threadCount);
     __syncthreads();
 
-    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata128.blocks + blockIdx.x]);
+    omega12::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
 Sparse:
-    if(cdata128.x/(p * p) < cdata128.bstart + cdata128.sieveWords * 64 * blockIdx.x) goto End;
+    if(cdata.x/(p * p) < cdata.bstart + cdata.sieveWords * 64 * blockIdx.x) goto End;
     omega12::computeMuPhiSparse(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata128.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);
     __syncthreads();
   }
 End:
@@ -347,7 +348,7 @@ End:
   data->d_partialsums[blockIdx.x] = omega12::inclusiveScan(s_sums);
  } // phew!
 
-__global__ void omega12global::scanVectorized(int64_t * a, uint64_t * overflow)
+__global__ void Omega12Global::scanVectorized(int64_t * a, uint64_t * overflow)
 {
   __shared__ extern int64_t s_a[];
   s_a[threadIdx.x] = a[blockIdx.x*blockDim.x+threadIdx.x];
@@ -359,7 +360,7 @@ __global__ void omega12global::scanVectorized(int64_t * a, uint64_t * overflow)
   a[blockIdx.x*blockDim.x+threadIdx.x] = s_a[threadIdx.x];
 }
 
-__global__ void omega12global::addMultiply(int64_t * a, uint64_t * b, int16_t * c) // a = (a + b) * c
+__global__ void Omega12Global::addMultiply(int64_t * a, uint64_t * b, int16_t * c) // a = (a + b) * c
 {
   uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
   int64_t d = (int64_t)b[blockIdx.x];
@@ -367,7 +368,7 @@ __global__ void omega12global::addMultiply(int64_t * a, uint64_t * b, int16_t * 
   a[tidx] = d * c[tidx];
 }
 
-__global__ void omega12global::addArrays(uint64_t * a, uint64_t * b, uint32_t numElements) // a += b
+__global__ void Omega12Global::addArrays(uint64_t * a, uint64_t * b, uint32_t numElements) // a += b
 {
   uint64_t tidx = threadIdx.x + blockIdx.x*blockDim.x;
   if(tidx < numElements)
@@ -376,5 +377,5 @@ __global__ void omega12global::addArrays(uint64_t * a, uint64_t * b, uint32_t nu
 
 __host__ void S2hardHost::transferConstants()
 {
-  cudaMemcpyToSymbolAsync(cdata128, &h_cdata128, sizeof(c_data64), 0, cudaMemcpyDefault);
+  cudaMemcpyToSymbolAsync(cdata, &h_cdata, sizeof(c_data64), 0, cudaMemcpyDefault);
 }

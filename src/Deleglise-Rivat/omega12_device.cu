@@ -259,7 +259,7 @@ void omega12::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
   s_sums[threadIdx.x] -= muPhi;
 }
 
-__global__ void Omega12Global::omega12_ctl(S2data_64 * data)
+__global__ void Omega12Global::omega12_ctl(omega12data_128 * data)
 {
   // uint64_t bstart = cdata.bstart + cdata.sieveWords * 64 * blockIdx.x;
   // __shared__ uint32_t s_primeCache[threadsPerBlock]; // this is because many threads
@@ -375,7 +375,7 @@ __global__ void Omega12Global::addArrays(uint64_t * a, uint64_t * b, uint32_t nu
     a[tidx] += b[tidx];
 }
 
-__host__ void S2hardHost::transferConstants()
+__host__ void Omega12Host::transferConstants()
 {
-  cudaMemcpyToSymbolAsync(cdata, &h_cdata, sizeof(c_data64), 0, cudaMemcpyDefault);
+  cudaMemcpyToSymbolAsync(cdata, &h_cdata, sizeof(cdata128), 0, cudaMemcpyDefault);
 }

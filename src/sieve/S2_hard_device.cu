@@ -12,24 +12,24 @@ __constant__ const uint16_t threadsPerBlock = 256;
 __device__
 void mRange::update(uint32_t p, const nRange & n)
 {
-  lo = cdata.x / (n.hi * p);
-  lo = lo < cdata.y/p ? cdata.y/p : lo;
-  lo = lo > cdata.y ? cdata.y : lo;
-  hi = cdata.x / ((n.lo + 1) * p);
-  hi = hi < cdata.y/p ? cdata.y/p : hi;
-  hi = hi > cdata.y ? cdata.y : hi;
+  lo = cdata64.x / (n.hi * p);
+  lo = lo < cdata64.y/p ? cdata64.y/p : lo;
+  lo = lo > cdata64.y ? cdata64.y : lo;
+  hi = cdata64.x / ((n.lo + 1) * p);
+  hi = hi < cdata64.y/p ? cdata64.y/p : hi;
+  hi = hi > cdata64.y ? cdata64.y : hi;
 }
 
 __device__
 void mRange::update_hi(uint32_t p, const nRange & n)
 {
-  uint64_t ub = min(cdata.x / (p * p * p), cdata.y);
-  // uint64_t ub = cdata.y;//min(cdata.y, cdata.z/p);
+  uint64_t ub = min(cdata64.x / (p * p * p), cdata64.y);
+  // uint64_t ub = cdata64.y;//min(cdata64.y, cdata64.z/p);
 
-  lo = cdata.x / (n.hi * p);
+  lo = cdata64.x / (n.hi * p);
   lo = lo <= p ? p + 2 : lo;
   lo = lo > ub ? ub : lo;
-  hi = cdata.x / ((n.lo + 1) * p);
+  hi = cdata64.x / ((n.lo + 1) * p);
   hi = hi <= p ? p + 2 : hi;
   hi = hi > ub ? ub : hi;
 }
@@ -37,19 +37,19 @@ void mRange::update_hi(uint32_t p, const nRange & n)
 __device__
 nRange::nRange(uint64_t bstart)
 {
-  bitRange = 32 * cdata.sieveWords / threadsPerBlock;
-  tfw = threadIdx.x * cdata.sieveWords / threadsPerBlock;
-  lo = bstart + 64 * threadIdx.x * (cdata.sieveWords / threadsPerBlock);
-  hi = bstart + 64 * (threadIdx.x + 1) * (cdata.sieveWords / threadsPerBlock);
+  bitRange = 32 * cdata64.sieveWords / threadsPerBlock;
+  tfw = threadIdx.x * cdata64.sieveWords / threadsPerBlock;
+  lo = bstart + 64 * threadIdx.x * (cdata64.sieveWords / threadsPerBlock);
+  hi = bstart + 64 * (threadIdx.x + 1) * (cdata64.sieveWords / threadsPerBlock);
 }
 
 __device__
 void S2dev::sieveInit(uint32_t * s_sieve, uint64_t bstart)
 {
-  for(uint32_t i = threadIdx.x; i < cdata.sieveWords; i += blockDim.x){
+  for(uint32_t i = threadIdx.x; i < cdata64.sieveWords; i += blockDim.x){
     uint64_t j = bstart/64 + i;
     uint32_t s = d_bitmask[0][j % d_smallPrimes[0]];
-    for(uint16_t a = 1; a < cdata.c - 1; a++)
+    for(uint16_t a = 1; a < cdata64.c - 1; a++)
       s |= d_bitmask[a][j % d_smallPrimes[a]];
     s_sieve[i] = s;
   }
@@ -58,7 +58,7 @@ void S2dev::sieveInit(uint32_t * s_sieve, uint64_t bstart)
 __device__
 void S2dev::markSmallPrimes(uint32_t * s_sieve, uint64_t bstart, uint16_t a)
 {
-  for(uint32_t i = threadIdx.x; i < cdata.sieveWords; i += blockDim.x){
+  for(uint32_t i = threadIdx.x; i < cdata64.sieveWords; i += blockDim.x){
     uint64_t j = bstart/64 + i;
     s_sieve[i] |= d_bitmask[a - 1][j % d_smallPrimes[a - 1]];
   }
@@ -93,7 +93,7 @@ void S2dev::markLargePrimes(uint32_t * s_sieve, nRange & nr, uint32_t p,
 __device__
 uint32_t S2dev::getCount(uint32_t * s_sieve)
 {
-  uint32_t c = 0, threadWords = cdata.sieveWords/blockDim.x;
+  uint32_t c = 0, threadWords = cdata64.sieveWords/blockDim.x;
   uint16_t start = threadIdx.x * threadWords;
 
   for(uint16_t i = start; i < start+threadWords; i++){
@@ -212,11 +212,11 @@ void S2dev::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_nu
 // as m decreases x/(m * p) increases, so decrementing m allows us to
 // count up through the sieve to get the appropriate value of phi
 
-  bool wouldMiss = (cdata.x /( mr.hi * p) <= nr.hi) && (cdata.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata.y / p);
+  bool wouldMiss = (cdata64.x /( mr.hi * p) <= nr.hi) && (cdata64.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata64.y / p);
   for(uint64_t m = mr.hi - (1 - mr.hi & 1ull); m > mr.lo - wouldMiss; m -= 2){
-    if(data->d_lpf[((m - cdata.mstart) >> 1)] > p){
-      int8_t mu = data->d_mu[(m - cdata.mstart) >> 1];
-      uint64_t n = cdata.x / (m * p);
+    if(data->d_lpf[((m - cdata64.mstart) >> 1)] > p){
+      int8_t mu = data->d_mu[(m - cdata64.mstart) >> 1];
+      uint64_t n = cdata64.x / (m * p);
       if(mu != 0 && n <= nr.hi){
         phi += S2dev::countUpSieve(s_sieve, currentBit, (1 + n - nr.lo) >> 1, nr.tfw);
         currentBit = (1 + n - nr.lo) >> 1;
@@ -243,11 +243,11 @@ void S2dev::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
 // as m decreases x/(m * p) increases, so decrementing m allows us to
 // count up through the sieve to get the appropriate value of phi
 
-  bool wouldMiss = (cdata.x /( mr.hi * p) <= nr.hi) && (cdata.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata.y / p);
+  bool wouldMiss = (cdata64.x /( mr.hi * p) <= nr.hi) && (cdata64.x /( mr.hi * p) >= nr.lo) && (mr.hi > 1 + cdata64.y / p);
   for(uint64_t m = mr.hi - (1 - mr.hi & 1ull); m > mr.lo - wouldMiss; m -= 2){
     uint32_t s = data->d_bitsieve[m/64];
     if((1u & ~(s >> ((m % 64)/2))) == 1u){
-      uint64_t n = cdata.x / (m * p);
+      uint64_t n = cdata64.x / (m * p);
       // if(p> 3769) printf("%llu\n", m);
       if(n <= nr.hi){
         phi += S2dev::countUpSieve(s_sieve, currentBit, (1 + n - nr.lo) >> 1, nr.tfw);
@@ -263,11 +263,11 @@ void S2dev::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
 
 __global__ void S2glob::S2ctl(S2data_64 * data)
 {
-  // uint64_t bstart = cdata.bstart + cdata.sieveWords * 64 * blockIdx.x;
+  // uint64_t bstart = cdata64.bstart + cdata64.sieveWords * 64 * blockIdx.x;
   // __shared__ uint32_t s_primeCache[threadsPerBlock]; // this is because many threads
                                                      // will be reading the same prime
                                                      // simultaneously
-  __shared__ extern uint32_t s_sieve[];//[cdata.sieveWords];           // where the magic happens
+  __shared__ extern uint32_t s_sieve[];//[cdata64.sieveWords];           // where the magic happens
   __shared__ uint32_t s_count[threadsPerBlock];      // stores counts below each thread's
                                                      // group of words in the sieve
   __shared__ int32_t s_sums[threadsPerBlock];        // stores mu(m)*phi(x/(p*m) - b, a)
@@ -278,75 +278,75 @@ __global__ void S2glob::S2ctl(S2data_64 * data)
   S2dev::zero(s_num, threadsPerBlock);
   __syncthreads();
 
-  nRange nr(cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
+  nRange nr(cdata64.bstart + cdata64.sieveWords * 64 * blockIdx.x);
 
-  uint32_t pi_p = cdata.c - 1;
+  uint32_t pi_p = cdata64.c - 1;
   uint32_t p = d_smallPrimes[pi_p];
 
-  S2dev::sieveInit(s_sieve, cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
+  S2dev::sieveInit(s_sieve, cdata64.bstart + cdata64.sieveWords * 64 * blockIdx.x);
   __syncthreads();
   uint32_t threadCount = S2dev::getCount(s_sieve);
   __syncthreads();
-  S2dev::exclusiveScan(threadCount, s_count, data->d_sums[pi_p * cdata.blocks + blockIdx.x]);
+  S2dev::exclusiveScan(threadCount, s_count, data->d_sums[pi_p * cdata64.blocks + blockIdx.x]);
   __syncthreads();
   // if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
   S2dev::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
   __syncthreads();
 
-  data->d_num[pi_p * cdata.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
+  data->d_num[pi_p * cdata64.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
   __syncthreads();
 
   while(pi_p < cutoff){
     pi_p++;
-    S2dev::markSmallPrimes(s_sieve, cdata.bstart + cdata.sieveWords * 64 * blockIdx.x, pi_p);
+    S2dev::markSmallPrimes(s_sieve, cdata64.bstart + cdata64.sieveWords * 64 * blockIdx.x, pi_p);
     __syncthreads();
     threadCount = S2dev::getCount(s_sieve);
      __syncthreads();
-    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
+    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata64.blocks + blockIdx.x]);
     __syncthreads();
     p = d_smallPrimes[pi_p];
     // if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
     S2dev::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata64.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
     __syncthreads();
   }
 
-  while(pi_p < cdata.primeListLength - 3){
+  while(pi_p < cdata64.primeListLength - 3){
 
     pi_p++;
     S2dev::markMedPrimes(s_sieve, nr, p, threadCount);
     __syncthreads();
 
-    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
+    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata64.blocks + blockIdx.x]);
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
     // if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
-    if(p > cdata.sqrty) goto Sparse;
+    if(p > cdata64.sqrty) goto Sparse;
 
     S2dev::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata64.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
     __syncthreads();
   }
 
-  while(pi_p < cdata.primeListLength - 3){
+  while(pi_p < cdata64.primeListLength - 3){
 
     pi_p++;
     S2dev::markMedPrimes(s_sieve, nr, p, threadCount);
     __syncthreads();
 
-    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata.blocks + blockIdx.x]);
+    S2dev::exclusiveScan(threadCount, s_count, data->d_sums[(pi_p) * cdata64.blocks + blockIdx.x]);
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
     // if(threadIdx.x == 0 && blockIdx.x == 0) printf("%u\n", p);
 Sparse:
-    if(cdata.x/(p * p) < cdata.bstart + cdata.sieveWords * 64 * blockIdx.x) goto End;
+    if(cdata64.x/(p * p) < cdata64.bstart + cdata64.sieveWords * 64 * blockIdx.x) goto End;
     S2dev::computeMuPhiSparse(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
-    data->d_num[pi_p * cdata.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
+    data->d_num[pi_p * cdata64.blocks + blockIdx.x] = S2dev::inclusiveScan(s_num);
     __syncthreads();
   }
 End:
@@ -395,5 +395,5 @@ __global__ void testRed(int32_t * array)
 
 __host__ void S2hardHost::transferConstants()
 {
-  cudaMemcpyToSymbolAsync(cdata, &h_cdata, sizeof(c_data64), 0, cudaMemcpyDefault);
+  cudaMemcpyToSymbolAsync(cdata64, &h_cdata, sizeof(c_data64), 0, cudaMemcpyDefault);
 }

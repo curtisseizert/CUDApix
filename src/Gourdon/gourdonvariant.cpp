@@ -2,8 +2,9 @@
 #include <CUDASieve/cudasieve.hpp>
 #include <cuda_uint128.h>
 
-#include "sieve/S2_hard_host.cuh"
 #include "Gourdon/gourdonvariant.hpp"
+#include "sieve/S2_hard_host.cuh"
+
 
 GourdonVariant64::GourdonVariant64(uint64_t x, uint64_t y, uint16_t c)
 {

@@ -160,4 +160,3 @@ uint128_t Omega12Host::omega12(uint128_t x, uint64_t y, uint16_t c)
   timer.displayTime();
   return sum;
 }
-

@@ -11,7 +11,7 @@ struct c_data64{
   uint16_t c, sieveWords;
 };
 
-__constant__ c_data64 cdata;
+__constant__ c_data64 cdata64;
 
 struct S2data_64{
   int64_t * d_sums, * d_partialsums;

@@ -1,5 +1,5 @@
 # Location of the CUDA toolkit
-CUDA_DIR = /usr/local/cuda-8.0
+CUDA_DIR = /opt/cuda
 # Compute capability of the target GPU
 GPU_ARCH = sm_61
 # Compilers to use

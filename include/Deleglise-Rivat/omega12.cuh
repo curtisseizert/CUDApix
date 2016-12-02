@@ -23,29 +23,29 @@ struct omega12data_128{
   int8_t * d_mu;
 };
 
-struct nRange{
+struct nRange128{
   uint64_t lo, hi;
   uint16_t tfw, bitRange; // tfw = threadFirstWord
-  __device__ nRange(uint64_t bstart);
+  __device__ inline nRange128(uint64_t bstart);
 };
 
-struct mRange{
+struct mRange128{
   uint64_t lo, hi;
-  __device__ void update(uint32_t p, const nRange & n);
-  __device__ void update_hi(uint32_t p, const nRange & n);
+  __device__ void update(uint32_t p, const nRange128 & n);
+  __device__ void update_hi(uint32_t p, const nRange128 & n);
 };
 
 
 namespace omega12{
   __device__ void sieveInit(uint32_t * d_sieve, uint64_t bstart);
   __device__ void markSmallPrimes(uint32_t * s_sieve, uint64_t bstart, uint16_t c);
-  __device__ void markMedPrimes(uint32_t * s_sieve, nRange & nr, uint32_t p, uint32_t & threadCount);
-  __device__ void markLargePrimes(uint32_t * s_sieve, nRange & nr, uint32_t p, uint32_t & threadCount);
+  __device__ void markMedPrimes(uint32_t * s_sieve, nRange128 & nr, uint32_t p, uint32_t & threadCount);
+  __device__ void markLargePrimes(uint32_t * s_sieve, nRange128 & nr, uint32_t p, uint32_t & threadCount);
   __device__ uint32_t getCount(uint32_t * s_sieve);
   __device__ void updatePrimeCache(uint32_t * d_primeList, uint32_t * s_primeCache, uint32_t first, uint32_t primeListLength);
   __device__ uint64_t exclusiveScan(int64_t * array);
-  __device__ void computeMuPhi(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange & nr); // want to -= this quantity
-  __device__ void computeMuPhiSparse(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange & nr); // want to -= this quantity
+  __device__ void computeMuPhi(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange128 & nr); // want to -= this quantity
+  __device__ void computeMuPhiSparse(uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num, int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange128 & nr); // want to -= this quantity
   __device__ uint32_t countUpSieve(uint32_t * s_sieve, uint16_t firstBit, uint16_t lastBit, uint16_t threadFirstWord);
 
   template <typename T>

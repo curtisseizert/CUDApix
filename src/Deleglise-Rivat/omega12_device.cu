@@ -10,7 +10,7 @@
 __constant__ const uint16_t threadsPerBlock = 256;
 
 __device__
-void mRange::update(uint32_t p, const nRange & n)
+void mRange128::update(uint32_t p, const nRange128 & n)
 {
   lo = cdata.x / (n.hi * p);
   lo = lo < cdata.y/p ? cdata.y/p : lo;
@@ -21,7 +21,7 @@ void mRange::update(uint32_t p, const nRange & n)
 }
 
 __device__
-void mRange::update_hi(uint32_t p, const nRange & n)
+void mRange128::update_hi(uint32_t p, const nRange128 & n)
 {
   uint64_t ub = min(div128to64(cdata.x, (p * p * p)), cdata.y);
 
@@ -34,7 +34,7 @@ void mRange::update_hi(uint32_t p, const nRange & n)
 }
 
 __device__
-nRange::nRange(uint64_t bstart)
+nRange128::nRange128(uint64_t bstart)
 {
   bitRange = 32 * cdata.sieveWords / threadsPerBlock;
   tfw = threadIdx.x * cdata.sieveWords / threadsPerBlock;
@@ -64,7 +64,7 @@ void omega12::markSmallPrimes(uint32_t * s_sieve, uint64_t bstart, uint16_t a)
 }
 
 __device__
-void omega12::markMedPrimes(uint32_t * s_sieve, nRange & nr, uint32_t p,
+void omega12::markMedPrimes(uint32_t * s_sieve, nRange128 & nr, uint32_t p,
                           uint32_t & threadCount)
 {
   uint32_t off = p - nr.lo % p;
@@ -77,7 +77,7 @@ void omega12::markMedPrimes(uint32_t * s_sieve, nRange & nr, uint32_t p,
 }
 
 __device__
-void omega12::markLargePrimes(uint32_t * s_sieve, nRange & nr, uint32_t p,
+void omega12::markLargePrimes(uint32_t * s_sieve, nRange128 & nr, uint32_t p,
                             uint32_t & threadCount)
 {
   uint32_t off = p - nr.lo % p;
@@ -199,12 +199,12 @@ __device__ uint32_t omega12::countUpSieve(uint32_t * s_sieve, uint16_t firstBit,
 
 __device__
 void omega12::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_num,
-                          int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange & nr)
+                          int32_t * s_sums, uint32_t p, omega12data_128 * data, nRange128 & nr)
 {
   int32_t muPhi = 0;
   uint32_t phi = s_count[threadIdx.x];
   uint16_t currentBit = 0;
-  mRange mr;
+  mRange128 mr;
   mr.update(p, nr);
   s_num[threadIdx.x] = 0;
 
@@ -230,12 +230,12 @@ void omega12::computeMuPhi( uint32_t * s_count, uint32_t * s_sieve, int16_t * s_
 __device__
 void omega12::computeMuPhiSparse( uint32_t * s_count, uint32_t * s_sieve,
                                 int16_t * s_num, int32_t * s_sums, uint32_t p,
-                                omega12data_128 * data, nRange & nr)
+                                omega12data_128 * data, nRange128 & nr)
 {
   int32_t muPhi = 0;
   uint32_t phi = s_count[threadIdx.x];
   uint16_t currentBit = 0;
-  mRange mr;
+  mRange128 mr;
   mr.update_hi(p, nr);
   s_num[threadIdx.x] = 0;
 
@@ -276,7 +276,7 @@ __global__ void Omega12Global::omega12_ctl(omega12data_128 * data)
   omega12::zero(s_num, threadsPerBlock);
   __syncthreads();
 
-  nRange nr(cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
+  nRange128 nr(cdata.bstart + cdata.sieveWords * 64 * blockIdx.x);
 
   uint32_t pi_p = cdata.c - 1;
   uint32_t p = d_smallPrimes[pi_p];

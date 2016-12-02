@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include <cuda_uint128.h>
 
+#ifndef _DELEGLISE_RIVAT_128
+#define _DELEGLISE_RIVAT_128
+
 class deleglise_rivat64{
 private:
   uint16_t c;
@@ -64,3 +67,5 @@ inline void xOverPSquared(uint64_t * p, uint128_t x, size_t len);
 inline void xOverPSquared(uint64_t * p, uint64_t x, size_t len);
 inline void sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len);
 inline void squareEach(uint64_t * pi, size_t len);
+
+#endif

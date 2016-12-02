@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <cuda_runtime.h>
+
 #include "sieve/S2_hard_device.cuh"
 
 #ifndef _S2_HARD_HOST

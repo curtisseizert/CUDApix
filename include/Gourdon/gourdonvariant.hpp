@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <cuda_uint128.h>
 
+#ifndef _GOURDON_64
+#define _GOURDON_64
 
 class GourdonVariant64{
 private:
@@ -60,3 +62,5 @@ inline void xOverPSquared(uint64_t * p, uint64_t x, size_t len);
 inline void sqrtxOverSqrtp(uint64_t * p, uint64_t sqrtx, size_t len);
 inline void squareEach(uint64_t * pi, size_t len);
 inline void addToArray(uint64_t * pi, size_t len, uint64_t k);
+
+#endif

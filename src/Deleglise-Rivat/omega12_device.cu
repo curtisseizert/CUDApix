@@ -318,7 +318,7 @@ __global__ void Omega12Global::omega12_ctl(omega12data_128 * data)
     __syncthreads();
 
     p = data->d_primeList[pi_p + 1];
-    if(p > cdata.sqrty) goto Sparse;
+    if(p > cdata.sqrty) goto End;
 
     omega12::computeMuPhi(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
@@ -337,7 +337,7 @@ __global__ void Omega12Global::omega12_ctl(omega12data_128 * data)
 
     p = data->d_primeList[pi_p + 1];
 Sparse:
-    if(cdata.x/(p * p) < cdata.bstart + cdata.sieveWords * 64 * blockIdx.x) goto End;
+    if(cdata.x/(p * p * p) < cdata.bstart + cdata.sieveWords * 64 * blockIdx.x) goto End;
     omega12::computeMuPhiSparse(s_count, s_sieve, s_num, s_sums, p, data, nr);
     __syncthreads();
     data->d_num[pi_p * cdata.blocks + blockIdx.x] = omega12::inclusiveScan(s_num);

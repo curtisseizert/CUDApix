@@ -123,22 +123,23 @@ uint128_t deleglise_rivat128::pi_deleglise_rivat(uint128_t x, uint64_t y, uint16
   uint64_t pi_y = pi_dr.pi_y;
   uint128_t p2, pi;
 
-  // p2 = P2(x, y);
+  p2 = P2(x, y);
 
-  // std::cout << pi_dr.A() << std::endl;
-  std::cout << pi_dr.omega3() << std::endl;
+  std::cout << "A = " << pi_dr.A() << std::endl;
+  std::cout << "omega3 = " << pi_dr.omega3() << std::endl;
+  // std::cout << pi_dr.omega12() << std::endl;
   // std::cout << pi_dr.A_cpu() << std::endl;
+  std::cout << "Sigma = " << pi_dr.sigma() << std::endl;
 
-  // std::cout << pi_dr.sigma1()<< std::endl;
-  // std::cout << pi_dr.sigma2()<< std::endl;
-  // std::cout << pi_dr.sigma3()<< std::endl;
-  // std::cout << pi_dr.sigma4()<< std::endl;
-  // std::cout << pi_dr.sigma5()<< std::endl;
-  // std::cout << pi_dr.sigma6()<< std::endl;
+  std::cout << pi_dr.sigma1()<< std::endl;
+  std::cout << pi_dr.sigma2()<< std::endl;
+  std::cout << pi_dr.sigma3()<< std::endl;
+  std::cout << pi_dr.sigma4()<< std::endl;
+  std::cout << pi_dr.sigma5()<< std::endl;
+  std::cout << pi_dr.sigma6()<< std::endl;
 
 
   std::cout << "pi(x) = phi(x, a) - 1 + a - P2(x, a), where a = pi(y)" << std::endl;
-  std::cout << "P2\t\t:\t" << p2 << std::endl;
 
   std::cout << std::endl;
 

@@ -39,6 +39,7 @@ private:
   uint64_t y, z, sqrtx, cbrtx, qrtx, sqrtz;
   uint64_t pi_y, pi_cbrtx, pi_sqrtz, pi_qrtx, pi_sqrtx;
 
+  uint128_t sigma() const;
   uint128_t sigma1() const;
   uint128_t sigma2() const;
   uint128_t sigma3() const;

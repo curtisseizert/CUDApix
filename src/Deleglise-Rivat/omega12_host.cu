@@ -20,7 +20,7 @@ const uint16_t h_threadsPerBlock = 256;
 
 Omega12Host::Omega12Host(uint128_t x, uint64_t y, uint16_t c)
 {
-  maxPrime_ = _isqrt(div128to128(x,y));
+  maxPrime_ = _iqrt(x);
   makeData(x, y, c);
   allocate();
 

@@ -93,7 +93,7 @@ uint128_t deleglise_rivat128::A()
     // calculate number of blocks to span maximum range of q values (defined at
     // p = x^(1/4))
     uint32_t blocks = (qMaxIdx - qMinIdx)/threadsPerBlock + 1;
-    std::cout << pi_table.get_base() << " " << pi_table.get_bottom() << " " << blocks << " " << qMaxIdx << " " << pMaxIdx << std::endl;
+    // std::cout << pi_table.get_base() << " " << pi_table.get_bottom() << " " << blocks << " " << qMaxIdx << " " << pMaxIdx << std::endl;
 
     // launch kernel
     cudaDeviceSynchronize();
@@ -113,7 +113,7 @@ uint128_t deleglise_rivat128::A()
   }
 
   sum = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
-  std::cout << "Low PQ:\t" << sum << std::endl;
+  // std::cout << "Low PQ:\t" << sum << std::endl;
 
   //
   global::zero<<<maxblocks, threadsPerBlock, 0, stream[0]>>>(d_sums, maxblocks);
@@ -135,7 +135,7 @@ uint128_t deleglise_rivat128::A()
     // calculate number of blocks to span maximum range of q values (defined at
     // p = x^(1/4))
     uint32_t blocks = (pMaxIdx - pMinIdx) / threadsPerBlock + 1;
-    std::cout << "Blocks : " << blocks << std::endl;
+    // std::cout << "Blocks : " << blocks << std::endl;
 
     // launch kernel
     cudaDeviceSynchronize();
@@ -154,7 +154,7 @@ uint128_t deleglise_rivat128::A()
   }
 
   uint128_t sum2 = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
-  std::cout << "Hi PQ:\t" << sum2 << std::endl;
+  // std::cout << "Hi PQ:\t" << sum2 << std::endl;
 
   timer.stop();
   timer.displayTime();
@@ -200,7 +200,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
 
       // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
       if(q != 0)
-        s_pi_chi[threadIdx.x] += 1;//calculatePiChi(q, y, d_pitable, pi_0, base);
+        s_pi_chi[threadIdx.x] += calculatePiChi(q, y, d_pitable, pi_0, base);
     } // repeat for all p values in range
     __syncthreads();
 

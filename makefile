@@ -12,7 +12,7 @@ CCFLAGS = -O0 -std=c++11 -g -fopenmp
 
 # Flags for nvcc
 # ptxas-options=-dlcm=cg (vs. default of ca) is about a 2% performance gain
-NVCC_FLAGS = -ccbin /usr/bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo -Xcompiler -fopenmp
+NVCC_FLAGS = -ccbin /usr/bin/g++-5 -std=c++11 -arch=$(GPU_ARCH) -g -lineinfo -Xcompiler -fopenmp -lineinfo
 HOST_FLAGS = -Xcompiler -fopenmp,-pthread
 DIAGNOSTIC_FLAGS = -res-usage -Xptxas -warn-lmem-usage,-warn-spills -g -lineinfo
 INCLUDES = -I ./include/ -I $(CUDASIEVE_DIR)/include/ -I $(CUDA_DIR)/include/ -I $(UINT128_DIR) -I ./

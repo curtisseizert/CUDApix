@@ -54,8 +54,8 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
   // b = pi_gourdon->B();
   // std::cout << "B = " << b << "\n" << std::endl;
 
-  c_res = pi_gourdon->C_cpu();
-  std::cout << "C (cpu) = " << c_res << "\n" << std::endl;
+  // c_res = pi_gourdon->C_cpu();
+  // std::cout << "C (cpu) = " << c_res << "\n" << std::endl;
   //
   // c_res = pi_gourdon->C();
   // std::cout << "C (gpu) = " << c_res << "\n" << std::endl;
@@ -63,8 +63,8 @@ uint64_t GourdonVariant64::piGourdon(uint64_t x, uint64_t y, uint16_t c)
   // d = S2hardHost::S2hard(x, y, c, pi_gourdon->qrtx);
   // std::cout << "D = " << d << "\n" << std::endl;
   //
-  // s = pi_gourdon->sigma();
-  // std::cout << "Sigma (gpu) = " << s << "\n" << std::endl;
+  s = pi_gourdon->sigma();
+  std::cout << "Sigma (gpu) = " << s << "\n" << std::endl;
   //
   // p0 = pi_gourdon->phi_0();
   // std::cout << "phi_0 = " << p0 << "\n" << std::endl;

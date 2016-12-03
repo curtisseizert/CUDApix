@@ -114,6 +114,11 @@ int64_t deleglise_rivat64::sigma6() const
 ///
 /// 128-bit implemenation
 ///
+uint128_t deleglise_rivat128::sigma() const
+{
+  uint128_t sigma = sigma1() - sigma2() + sigma3() + sigma4() + sigma5() - sigma6();
+  return sigma;
+}
 
 uint128_t deleglise_rivat128::sigma1() const
 {
@@ -183,7 +188,7 @@ uint128_t deleglise_rivat128::sigma5() const
   return s5;
 }
 
-uint128_t deleglise_rivat128::sigma6() const
+uint128_t deleglise_rivat128::sigma6() const // returns -sigma6
 {
   uint128_t s6 = 0;
   PrimeArray p(qrtx, cbrtx);

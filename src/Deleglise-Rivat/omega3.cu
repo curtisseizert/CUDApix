@@ -85,8 +85,8 @@ uint128_t deleglise_rivat128::omega3()
     // get this iteration's pi table and bounds
     uint64_t pi_max = pi_table.get_pi_base();
     uint32_t * d_piTable = pi_table.getNextDown();
-    std::cout << "Base: " << pi_table.get_base() << "\t\tBlocks: " << blocks << std::endl;
-    std::cout << "pMinIdx : " << pMinIdx << " pCornerIdx : " << pCornerIdx << " pMaxIdx : " << pi_qrtx << std::endl;
+    // std::cout << "Base: " << pi_table.get_base() << "\t\tBlocks: " << blocks << std::endl;
+    // std::cout << "pMinIdx : " << pMinIdx << " pCornerIdx : " << pCornerIdx << " pMaxIdx : " << pi_qrtx << std::endl;
     // launch kernel
     cudaDeviceSynchronize();
     cudaProfilerStart();
@@ -149,8 +149,8 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
 
         // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
         if(q != 0){
-          s_pi[threadIdx.x] += 1;//lookupPi(q, d_pitable, pi_0, base) + 2;
-          // s_pi[threadIdx.x] -= i;
+          s_pi[threadIdx.x] += lookupPi(q, d_pitable, pi_0, base) + 2;
+          s_pi[threadIdx.x] -= i;
         }
       }
     } // repeat for all p values in range
@@ -174,8 +174,8 @@ void Omega3_kernel( uint128_t x, uint64_t * pq, uint32_t * d_pitable, uint64_t p
 
         // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
         if(q != 0){
-          s_pi[threadIdx.x] += 1;//lookupPi(q, d_pitable, pi_0, base) + 2;
-          // s_pi[threadIdx.x] -= i;
+          s_pi[threadIdx.x] += lookupPi(q, d_pitable, pi_0, base) + 2;
+          s_pi[threadIdx.x] -= i;
         }else{
           break;
         }

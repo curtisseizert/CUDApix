@@ -1,8 +1,7 @@
 #include <stdint.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <thrust/reduce.h>
-#include <thrust/execution_policy.h>
+#include <cuda_uint128_primitives.cuh>
 
 #include <CUDASieve/cudasieve.hpp>
 #include <CUDASieve/host.hpp>
@@ -128,9 +127,9 @@ uint128_t	 Omega12Host::launchIter()
 
   Omega12Global::addArrays<<<h_cdata.elPerBlock, h_cdata.blocks, 0, stream[1]>>>(data->d_totals, data->d_totalsNext, h_cdata.blocks);
 
-  omega12_res = thrust::reduce(thrust::device, data->d_partialsums, data->d_partialsums + h_cdata.blocks);
+  omega12_res = cuda128::reduce64to128(data->d_partialsums, h_cdata.blocks);
 
-  omega12_res += thrust::reduce(thrust::device, data->d_sums, data->d_sums + (h_cdata.blocks * h_cdata.elPerBlock));
+  omega12_res += cuda128::reduce64to128(data->d_sums, (h_cdata.blocks * h_cdata.elPerBlock));
   cudaDeviceSynchronize();
 
   // std::cout << "\t" <<100 * h_cdata.bstart/h_cdata.z << "% complete\r";

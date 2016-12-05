@@ -47,6 +47,8 @@ private:
   uint128_t sigma5() const;
   uint128_t sigma6() const;
 
+  uint128_t S0();
+
   uint128_t A();
   uint128_t A_cpu();
 

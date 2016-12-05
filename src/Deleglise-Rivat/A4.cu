@@ -14,6 +14,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_uint128.h>
+#include <cuda_uint128_primitives.cuh>
 #include <CUDASieve/cudasieve.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
@@ -38,7 +39,7 @@ uint128_t deleglise_rivat128::A()
 // serve as the first q used for each p in the next iteration (with the next smaller
 // pi table)
   cudaStream_t stream[3];
-  uint64_t sum = 0;
+  uint128_t sum = 0;
   PrimeArray pq(qrtx, pow(sqrtx, 0.75));
 
   uint64_t num_p = pi_cbrtx - pi_qrtx;
@@ -57,7 +58,7 @@ uint128_t deleglise_rivat128::A()
   cudaStreamCreate(&stream[1]);
   cudaStreamCreate(&stream[2]);
 
-  cudaMemcpy(pq.h_primes, pq.d_primes, pq.len*sizeof(uint64_t), cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(pq.h_primes, pq.d_primes, pq.len*sizeof(uint64_t), cudaMemcpyDeviceToHost, stream[0]);
   global::setXPlusB<<<num_p/threadsPerBlock + 1, threadsPerBlock, 0, stream[1]>>>(d_lastQ, num_p+1, (uint64_t)1);
   global::zero<<<maxblocks, threadsPerBlock, 0, stream[2]>>>(d_sums, maxblocks);
 
@@ -112,7 +113,7 @@ uint128_t deleglise_rivat128::A()
 
   }
 
-  sum = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
+  sum = cuda128::reduce64to128(d_sums, maxblocks);
   // std::cout << "Low PQ:\t" << sum << std::endl;
 
   //
@@ -153,7 +154,7 @@ uint128_t deleglise_rivat128::A()
     cudaDeviceSynchronize();
   }
 
-  uint128_t sum2 = thrust::reduce(thrust::device, d_sums, d_sums + maxblocks);
+  uint128_t sum2 = cuda128::reduce64to128(d_sums, maxblocks);
   // std::cout << "Hi PQ:\t" << sum2 << std::endl;
 
   timer.stop();
@@ -187,7 +188,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
     for(uint64_t i = j; i < min((uint32_t)pMaxIdx, (uint32_t)j + numThreads); i++){
 
       uint64_t qidx = nextQ[i] + tidx;
-      if(qidx >= maxQidx) {atomicCAS((unsigned long long *)&s_lastQ[0], (unsigned long long)-1, (unsigned long long)maxQidx); break;}
+      if(qidx >= maxQidx) {atomicCAS((unsigned long long *)&s_lastQ[i - j], (unsigned long long)-1, (unsigned long long)maxQidx); break;}
       uint64_t q = pq[qidx];
       uint64_t p = pq[i];
 
@@ -196,7 +197,7 @@ void A_large_loPQ(uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pitable,
 
       // check to make sure quotient is > pi_0, and coordinate this block's value
       // of lastQ if not
-      q = checkRange(q, base, s_lastQ[i % numThreads], qidx);
+      q = checkRange(q, base, s_lastQ[i - j], qidx);
 
       // calculate pi(x/(p * q)) * chi(x/(p * q)) if q is in range
       if(q != 0)
@@ -227,7 +228,6 @@ void A_large_hiPQ_vert( uint128_t x, uint64_t y, uint64_t * pq, uint32_t * d_pit
   p = pq[tidx + pMinIdx];
   qidx = max((unsigned long long)tidx + pMinIdx + 1, (unsigned long long)nextQ[tidx + pMinIdx]);
   maxQ = min(x / (p * base), _isqrt(x/p));
-  // printf("%llu %llu\n", tidx, maxQ);
   while(qidx < maxQidx){
     uint64_t q = pq[qidx];
     if(q > maxQ) break;
@@ -264,8 +264,6 @@ __device__
 inline uint64_t calculatePiChi(uint64_t q, uint64_t y, uint32_t * d_pitable,
                                 uint64_t pi_0, uint64_t base)
 {
-  // uint64_t r = d_pitable[(q + 1 - (base & ~1ull))/2] + pi_0;
-
   // for some reason doing this with ptx cuts about 5% off overall run time
   uint64_t r;
   uint32_t *ptr = &d_pitable[(q + 1 - (base & ~1ull))/2];
@@ -283,7 +281,7 @@ __device__
 inline void minLastQ(uint32_t j, uint64_t * s_lastQ, uint64_t * nextQ, uint64_t * lastQ)
 {
   uint32_t i = j + threadIdx.x;
-  if(s_lastQ[threadIdx.x] != ~0){
+  if(s_lastQ[threadIdx.x] != (uint64_t)-1){
     atomicCAS((unsigned long long *)&lastQ[i], (unsigned long long)nextQ[i], (unsigned long long)s_lastQ[threadIdx.x]);
     atomicMin((unsigned long long *)&lastQ[i], (unsigned long long)s_lastQ[threadIdx.x]);
   }

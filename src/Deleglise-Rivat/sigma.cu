@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <CUDASieve/cudasieve.hpp>
 #include <cuda_uint128.h>
+#include <cuda_uint128_primitives.cuh>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 #include <math.h>
@@ -162,7 +163,8 @@ uint128_t deleglise_rivat128::sigma4() const
 
   thrust::upper_bound(thrust::device, pi.d_primes, pi.d_primes + pi.len, p.d_primes, p.d_primes + p.len, p.d_primes);
 
-  s4 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
+  s4 = cuda128::reduce64to128(p.d_primes, p.len);
+  s4 += mul128(pi_sqrtz, p.len);
 
   s4 = mul128(s4, pi_y);
 
@@ -183,7 +185,8 @@ uint128_t deleglise_rivat128::sigma5() const
 
   thrust::upper_bound(thrust::device, pi.d_primes, pi.d_primes + pi.len, p.d_primes, p.d_primes + p.len, p.d_primes);
 
-  s5 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
+  s5 = cuda128::reduce64to128(p.d_primes, p.len);
+  s5 += mul128(pi_cbrtx, p.len);
 
   return s5;
 }
@@ -192,7 +195,7 @@ uint128_t deleglise_rivat128::sigma6() const // returns -sigma6
 {
   uint128_t s6 = 0;
   PrimeArray p(qrtx, cbrtx);
-  PrimeArray pi(cbrtx, pow(sqrtx, 0.75));
+  PrimeArray pi(0, pow(sqrtx, 0.75) + 1);
 
   p.d_primes = CudaSieve::getDevicePrimes(p.bottom, p.top, p.len, 0);
   pi.d_primes = CudaSieve::getDevicePrimes(pi.bottom, pi.top, pi.len, 0);
@@ -205,7 +208,7 @@ uint128_t deleglise_rivat128::sigma6() const // returns -sigma6
   squareEach(p.d_primes, p.len);
   cudaDeviceSynchronize();
 
-  s6 = thrust::reduce(thrust::device, p.d_primes, p.d_primes + p.len);
+  s6 = cuda128::reduce64to128(p.d_primes, p.len);
 
   return s6;
 }

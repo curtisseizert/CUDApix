@@ -98,11 +98,12 @@ __device__ void atomicMult(int32_t * addr, int32_t val)
 
 __device__ void atomicMult(int64_t * addr, int64_t val)
 {
-  int64_t old = *addr, assumed;
+  int64_t old = *addr, assumed, swap;
 
   do{
+    swap = val * old;
     assumed = old;
-    old = atomicCAS((long long unsigned int*) addr, (long long unsigned int) assumed,(long long unsigned int) val * assumed);
+    old = atomicCAS((long long unsigned int*) addr, (long long unsigned int) assumed,(long long unsigned int) swap);
   }while(assumed != old);
 }
 
@@ -116,7 +117,7 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
      s_mu32[i] = 1;
      for(uint16_t j = 0; j < numSmallPrimes; j++){
-       if((2*i+1 + bstart) % smallPrimes[j] == 0) s_mu32[i] *= -smallPrimes[j];
+       if((2*i+1 + bstart) % smallPrimes[j] == 0) s_mu32[i] *= (int)-smallPrimes[j];
        if((2*i+1 + bstart) % (smallPrimes[j] * smallPrimes[j]) == 0) s_mu32[i] = 0;
      }
   }
@@ -149,7 +150,6 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
   }
 }
 
-// 64 bit mu - not working!!
 __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
                           uint32_t primeListLength, uint16_t sieveWords,
                           uint64_t bottom)
@@ -160,20 +160,23 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
      s_mu64[i] = 1;
      for(uint16_t j = 0; j < numSmallPrimes; j++){
-       if((2*i+1 + bstart) % smallPrimes[j] == 0) s_mu64[i] *= -smallPrimes[j];
+       if((2*i+1 + bstart) % smallPrimes[j] == 0) s_mu64[i] *= (int)-smallPrimes[j];
        if((2*i+1 + bstart) % (smallPrimes[j] * smallPrimes[j]) == 0) s_mu64[i] = 0;
      }
   }
 
   __syncthreads();
 
+
   for(uint32_t i = threadIdx.x; i < primeListLength; i+= blockDim.x){
       uint32_t p = d_primeList[i];
       uint32_t off = p - bstart % p;
       if(off%2==0) off += p;
       off = off >> 1;
-      for(; off < sieveWords; off += p) atomicMult(&s_mu64[off], (int64_t)-p);
+      for(; off < sieveWords; off += p) atomicMult(&s_mu64[off], (int64_t)-(int)p);
   }
+  // if(threadIdx.x == 0) printf("%lld\n", s_mu64[threadIdx.x]);
+
 
   for(uint32_t i = threadIdx.x; i < primeListLength; i+= blockDim.x){
       uint32_t p_squared = d_primeList[i] * d_primeList[i];
@@ -186,7 +189,7 @@ __global__ void mu_kernel(uint32_t * d_primeList, int8_t * d_mu,
   __syncthreads();
 
   for(uint16_t i = threadIdx.x; i < sieveWords; i += blockDim.x){
-    if(abs(s_mu64[i]) != (uint32_t)(2 * i + bstart + 1)) s_mu64[i] *= -1;
+    if(abs(s_mu64[i]) != (uint64_t)(2 * i + bstart + 1)) s_mu64[i] *= -1;
     if(s_mu64[i] == 0)          d_mu[i + sieveWords*blockIdx.x] = 0;
     else if(s_mu64[i] < 0)      d_mu[i + sieveWords*blockIdx.x] = -1;
     else if(s_mu64[i] > 0)      d_mu[i + sieveWords*blockIdx.x] = 1;

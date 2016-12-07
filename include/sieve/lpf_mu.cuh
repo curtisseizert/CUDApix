@@ -20,3 +20,5 @@ int8_t * gen_d_mu(T bottom, T top);
 
 template <typename T>
 int8_t * gen_h_mu(T bottom, T top);
+
+void gen_d_mu_lpf(uint64_t bottom, uint64_t top, int8_t * d_mu, uint64_t * d_lpf);

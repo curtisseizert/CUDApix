@@ -278,3 +278,25 @@ int8_t * gen_h_mu(T bottom, T top)
 
 template int8_t * gen_h_mu<uint32_t>(uint32_t bottom, uint32_t top);
 template int8_t * gen_h_mu<uint64_t>(uint64_t bottom, uint64_t top);
+
+void gen_d_mu_lpf(uint64_t bottom, uint64_t top, int8_t * d_mu, uint64_t * d_lpf)
+{
+  uint16_t threads = 256, sieveWords = h_sieveBytes/8;
+  uint32_t * d_primeList, primeListLength, blocks = 1 + (top - bottom) / (2 * sieveWords);
+  uint64_t arraySize = ((top - bottom) / 2) + sieveWords - (((top - bottom) / 2) % sieveWords);
+  cudaStream_t stream[2];
+
+  cudaStreamCreate(&stream[0]);
+  cudaStreamCreate(&stream[1]);
+
+  d_primeList = PrimeList::getSievingPrimes((uint32_t) sqrt(top), primeListLength, 1);
+
+  mu_kernel<<<blocks, threads, h_sieveBytes, stream[0]>>>(d_primeList, d_mu, primeListLength, sieveWords, bottom);
+  lpf_kernel<<<blocks, threads, h_sieveBytes, stream[1]>>>(d_primeList, d_lpf, primeListLength, sieveWords, bottom);
+
+  cudaStreamSynchronize(stream[0]);
+  cudaStreamSynchronize(stream[1]);
+  cudaStreamDestroy(stream[0]);
+  cudaStreamDestroy(stream[1]);
+  cudaFree(d_primeList);
+}

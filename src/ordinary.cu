@@ -7,7 +7,10 @@
 
 #include <CUDASieve/cudasieve.hpp>
 #include <cuda_uint128.h>
+#include <cuda_uint128_primitives.cuh>
 
+#include "general/tools.hpp"
+#include "general/device_functions.cuh"
 #include "sieve/phisieve_host.cuh"
 #include "phi.cuh"
 #include "ordinary.cuh"
@@ -59,10 +62,10 @@ uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
   uint16_t threadsPerBlock = 256;
   uint128_t sum = 0;
   uint128_t * d_quot = NULL;
-  uint64_t * d_lpf;
-  int8_t * d_mu;
+  uint64_t * d_lpf = NULL;
+  int8_t * d_mu = NULL;
   uint32_t * d_phi;
-  uint32_t blocks = 1024;
+  uint32_t blocks = 16384;
 
   Phisieve * phi = new Phisieve(1000);
 
@@ -70,22 +73,24 @@ uint128_t Ordinary(uint128_t x, uint64_t y, uint16_t c)
 
   d_phi = phi->getCountDevice();
 
-  cudaMalloc(&d_quot, blocks*threadsPerBlock * sizeof(uint128_t));
-  cudaMemset(d_quot, blocks*threadsPerBlock * sizeof(uint128_t), 0);
-
+  cudaMalloc(&d_quot, blocks * threadsPerBlock * sizeof(uint128_t));
+  cudaMalloc(&d_mu, (blocks * threadsPerBlock + 2048) * sizeof(int8_t));
+  cudaMalloc(&d_lpf, (blocks * threadsPerBlock + 2048) * sizeof(uint64_t));
+  global::zero<<<blocks, threadsPerBlock>>>(d_quot, blocks*threadsPerBlock);
+  cudaDeviceSynchronize();
+  // dispDeviceArray(d_quot, 2*threadsPerBlock);
   for(uint64_t i = 0; i < y; i += 2 * threadsPerBlock * blocks){
-    d_mu = gen_d_mu(i, i + (2 * threadsPerBlock * blocks));
-    d_lpf = gen_d_lpf(i, i + (2 * threadsPerBlock * blocks));
+    gen_d_mu_lpf(i, i + (2 * threadsPerBlock * blocks), d_mu, d_lpf);
 
     ordinaryKernelIter<<<blocks, threadsPerBlock>>>(d_mu, d_quot, d_lpf, d_phi, x, y, c, i);
-
     cudaDeviceSynchronize();
-
-    cudaFree(d_mu);
-    cudaFree(d_lpf);
   }
+  cudaFree(d_mu);
+  cudaFree(d_lpf);
+  sum += cuda128::reduce128to128(d_quot, blocks*threadsPerBlock);
 
-  //sum += thrust::reduce(thrust::device, d_quot, d_quot + (y / 2));
+  // dispDeviceArray(d_quot, 2*threadsPerBlock);
+
   cudaFree(d_quot);
 
   delete phi;
@@ -114,12 +119,13 @@ __global__ void ordinaryKernelIter(int8_t * d_mu, uint128_t * d_quot, uint64_t *
 {
   uint64_t tidx = threadIdx.x + blockIdx.x * blockDim.x;
   uint64_t n = 2 * tidx + 1 + i;
+  uint64_t r;
   if(n <= y){
     if(d_lpf[tidx] > d_small[c]){
       uint128_t m = div128to128(x,n);
-      uint128_t phi = div128to128(m, d_wheel[c]);
+      uint128_t phi = div128to128(m, d_wheel[c], &r);
       phi = mul128(phi,(uint64_t)d_totient[c]);
-      phi += (uint64_t)d_phi[((1+m%d_wheel[c]))/2];
+      phi += (uint64_t)d_phi[(1 + r) >> 1];
       if(d_mu[tidx] == 1)
       	d_quot[tidx] += phi;
       if(d_mu[tidx] == -1)

@@ -71,12 +71,16 @@ int main(int argc, char ** argv)
     // pi = deleglise_rivat64::pi_deleglise_rivat(x, y, c);
     // std::cout << "pi = " << pi << std::endl;
 
+
+    std::cout << Ordinary(x, y, c) << std::endl;
+    // std::cout << Ordinary((uint64_t)x.lo, y, c) << std::endl;
+
     // gnuplotA_Omega(x, y, c);
-    uint128_t pi = deleglise_rivat128::pi_deleglise_rivat(x, y, c);
+    // uint128_t pi = deleglise_rivat128::pi_deleglise_rivat(x, y, c);
     // pi = GourdonVariant64::piGourdon(x.lo, y, c);
     // uint64_t leaf = leafcount::omega3(x, y);
     // std::cout << "Leaves : " << leaf << std::endl;
-    std::cout << "pi = " << pi << std::endl;
+    // std::cout << "pi = " << pi << std::endl;
 
 
     cudaDeviceReset();

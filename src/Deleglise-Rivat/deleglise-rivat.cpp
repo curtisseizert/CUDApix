@@ -116,7 +116,7 @@ uint128_t deleglise_rivat128::omega12()
 	return Omega12Host::omega12(x, y, c);
 }
 
-uint64_t deleglise_rivat128::S0()
+uint128_t deleglise_rivat128::S0()
 {
   return Ordinary(x, y, c);
 }
@@ -126,17 +126,19 @@ uint128_t deleglise_rivat128::pi_deleglise_rivat(uint128_t x, uint64_t y, uint16
   deleglise_rivat128 pi_dr(x, y, c);
 
   uint64_t pi_y = pi_dr.pi_y;
-  uint128_t p2, a, w3, pi, s1, s2;
+  uint128_t p2, a, w3, pi, s0, s1, s2;
 
-  p2 = P2(x, y);
+  // p2 = P2(x, y);
 
-  a = pi_dr.A();
-  w3 = pi_dr.omega3();
-  s1 = pi_dr.sigma1();
+  std::cout <<  pi_dr.S0() << std::endl;
 
-  s2 = a - pi_dr.sigma2() + pi_dr.sigma3() + pi_dr.sigma4() + pi_dr.sigma5() - pi_dr.sigma6();
+  // a = pi_dr.A();
+  // w3 = pi_dr.omega3();
+  // s1 = pi_dr.sigma1();
+  //
+  // s2 = a - pi_dr.sigma2() + pi_dr.sigma3() + pi_dr.sigma4() + pi_dr.sigma5() - pi_dr.sigma6();
 
-  std::cout << "S1 = " << s1 << " S2 = " << s2 << " omega3 = " << w3 << std::endl;
+  std::cout << "S0 = " << s0 <<  " S1 = " << s1 << " S2 = " << s2 << " omega3 = " << w3 << std::endl;
   // std::cout << pi_dr.omega12() << std::endl;
   // std::cout << pi_dr.A_cpu() << std::endl;
   // std::cout << "Sigma = " << pi_dr.sigma() << std::endl;

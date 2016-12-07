@@ -8,7 +8,12 @@
 namespace global
 {
   template<typename T, typename U>
-  __global__ void zero(T * array, U max);
+  __global__ void zero(T * array, U max)
+  {
+    U tidx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if(tidx< max) array[tidx] = 0;
+  }
 
   template<typename T, typename U>
   __global__ void set(T * array, U max, T set)

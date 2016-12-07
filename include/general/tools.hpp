@@ -5,7 +5,7 @@
 template<typename T, typename U>
 void dispDeviceArray(T * d_a, U numElements)
 {
-  int64_t total = 0;
+  T total = 0;
   T * h_a = (T *)malloc(numElements * sizeof(T));
   cudaMemcpy(h_a, d_a, numElements * sizeof(T), cudaMemcpyDeviceToHost);
 
